@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kantain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            font-family: 'Inter', sans-serif;
+        }
+        .details-content-wrapper {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .details-content-wrapper h5 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            @apply text-gray-900 dark:text-gray-100;
+        }
+        .details-content-wrapper h6 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 0.75rem;
+            margin-bottom: 0.25rem;
+            @apply text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700;
+            padding-bottom: 0.25rem;
+        }
+        .details-content-wrapper br {
+            content: "";
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .details-content-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .details-content-wrapper td {
+            padding: 0.5rem;
+            @apply border border-gray-200 dark:border-gray-700;
+        }
+        #json-input::placeholder, #prescription-input::placeholder {
+            @apply text-gray-400 dark:text-gray-500;
+        }
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #3498db;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .filter-container {
+            max-height: 10rem;
+            overflow-y: auto;
+            @apply border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-800;
+        }
+        
+        .filter-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .filter-container::-webkit-scrollbar-track {
+            @apply bg-gray-100 dark:bg-gray-800;
+        }
+        .filter-container::-webkit-scrollbar-thumb {
+            @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+        }
+        .filter-container::-webkit-scrollbar-thumb:hover {
+            @apply bg-gray-400 dark:bg-gray-500;
+        }
+        .switcher-btn.active {
+            @apply text-white;
+        }
+        .dark .switcher-btn.active {
+            @apply text-gray-900;
+        }
+    </style>
+</head>
+<body class="antialiased bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300">
+
+        <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p id="progress-text" class="text-white text-lg mt-4 font-semibold">Käsitellään...</p>
+        </div>
+    </div>
+
+        <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-20">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center">
+                    <svg class="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 ml-3">Kantain</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none">
+                        <svg id="theme-icon-light" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        <svg id="theme-icon-dark" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                    </button>
+                    <button id="export-pdf" class="flex items-center bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-700 transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        Vie PDF
+                    </button>
+                    <button id="export-json" class="flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        Vie JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+        <div id="input-section" class="container mx-auto p-8 flex flex-col items-center">
+        <div class="w-full max-w-6xl bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg text-center">
+             <h2 class="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">Liitä tiedot</h2>
+            <div class="grid md:grid-cols-2 gap-8 mt-6 text-left">
+                <div>
+                    <label for="json-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Potilastiedot (JSON)</label>
+                    <textarea id="json-input" class="w-full h-72 p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150" placeholder='[{"oid":"...", "pvm":"...", ...}]'></textarea>
+                </div>
+                 <div>
+                    <label for="prescription-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reseptitiedot (JSON)</label>
+                    <textarea id="prescription-input" class="w-full h-72 p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150" placeholder='[{"setId":"...", "valmiste":"...", ...}]'></textarea>
+                </div>
+            </div>
+            <div id="error-message" class="mt-4 text-red-600 font-medium hidden"></div>
+            <button id="process-data" class="mt-8 w-full sm:w-auto inline-flex items-center justify-center bg-green-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-green-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Käsittele tiedot
+            </button>
+        </div>
+    </div>
+
+        <main id="output-section" class="container mx-auto p-4 sm:p-6 lg:p-8 hidden">
+         <div class="flex justify-end mb-4">
+             <button id="reset-data" class="flex items-center bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-600 transition duration-300 ease-in-out">
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9a9 9 0 0114.13-6.36M20 15a9 9 0 01-14.13 6.36" />
+                </svg>
+                Lataa uudet tiedot
+            </button>
+        </div>
+        
+                <div id="summary-section" class="mb-8 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md grid grid-cols-2 md:grid-cols-4 gap-4 text-center"></div>
+
+                <div class="mb-6 flex items-center justify-center">
+            <div id="view-switcher" class="relative w-max p-1 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center">
+                <div id="switcher-bg" class="absolute h-[85%] top-[7.5%] left-0 bg-white dark:bg-blue-600 rounded-full shadow-md transition-all duration-300 ease-in-out"></div>
+                <button id="tab-visits" class="switcher-btn relative z-10 px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-300 text-gray-600">Potilaskäynnit</button>
+                <button id="tab-prescriptions" class="switcher-btn relative z-10 px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-300 text-gray-600">Reseptit</button>
+            </div>
+        </div>
+
+
+                <div id="filter-section" class="mb-8 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md">
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <label for="keyword-search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Avainsanahaku</label>
+                    <input type="text" id="keyword-search" placeholder="Etsi esim. lääkkeen nimellä..." class="mt-1 block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" style="padding: 10px;">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Diagnoosi</label>
+                            <div class="space-x-2">
+                                <button class="text-xs text-blue-600 hover:underline" data-filter="diagnoosi-filter" data-action="select-all">Kaikki</button>
+                                <button class="text-xs text-blue-600 hover:underline" data-filter="diagnoosi-filter" data-action="deselect-all">Ei mitään</button>
+                            </div>
+                        </div>
+                        <div id="diagnoosi-filter" class="filter-container space-y-2"></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sijainti</label>
+                            <div class="space-x-2">
+                                <button class="text-xs text-blue-600 hover:underline" data-filter="sijainti-filter" data-action="select-all">Kaikki</button>
+                                <button class="text-xs text-blue-600 hover:underline" data-filter="sijainti-filter" data-action="deselect-all">Ei mitään</button>
+                            </div>
+                        </div>
+                        <div id="sijainti-filter" class="filter-container space-y-2"></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Henkilö</label>
+                            <div class="space-x-2">
+                                <button class="text-xs text-blue-600 hover:underline" data-filter="henkilo-filter" data-action="select-all">Kaikki</button>
+                                <button class="text-xs text-blue-600 hover:underline" data-filter="henkilo-filter" data-action="deselect-all">Ei mitään</button>
+                            </div>
+                        </div>
+                        <div id="henkilo-filter" class="filter-container space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="visits-section">
+            <div id="visits-container" class="grid grid-cols-1 gap-8"></div>
+        </div>
+        <div id="prescriptions-section" class="hidden">
+            <div id="prescriptions-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const prescriptionInput = document.getElementById('prescription-input');
+            const tabVisits = document.getElementById('tab-visits');
+            const tabPrescriptions = document.getElementById('tab-prescriptions');
+            const visitsSection = document.getElementById('visits-section');
+            const prescriptionsSection = document.getElementById('prescriptions-section');
+            const prescriptionsContainer = document.getElementById('prescriptions-container');
+            const switcherBg = document.getElementById('switcher-bg');
+            const processDataBtn = document.getElementById('process-data');
+            const jsonInput = document.getElementById('json-input');
+            const inputSection = document.getElementById('input-section');
+            const outputSection = document.getElementById('output-section');
+            const visitsContainer = document.getElementById('visits-container');
+            const exportJsonBtn = document.getElementById('export-json');
+            const exportPdfBtn = document.getElementById('export-pdf');
+            const resetDataBtn = document.getElementById('reset-data');
+            const errorMessage = document.getElementById('error-message');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const progressText = document.getElementById('progress-text');
+            const diagnoosiFilterContainer = document.getElementById('diagnoosi-filter');
+            const sijaintiFilterContainer = document.getElementById('sijainti-filter');
+            const henkiloFilterContainer = document.getElementById('henkilo-filter');
+            const keywordSearch = document.getElementById('keyword-search');
+            const summarySection = document.getElementById('summary-section');
+            const themeToggle = document.getElementById('theme-toggle');
+            const lightIcon = document.getElementById('theme-icon-light');
+            const darkIcon = document.getElementById('theme-icon-dark');
+            let currentData = [];
+            let prescriptionData = [];
+            let filteredData = [];
+
+            
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    lightIcon.classList.add('hidden');
+                    darkIcon.classList.remove('hidden');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    lightIcon.classList.remove('hidden');
+                    darkIcon.classList.add('hidden');
+                }
+            };
+            
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            applyTheme(savedTheme);
+
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+
+            
+            const renderVisits = (data) => {
+                visitsContainer.innerHTML = '';
+                const sortedData = data.sort((a, b) => new Date(b.pvm) - new Date(a.pvm));
+                sortedData.forEach(visit => {
+                    const serviceUnit = visit.organisaatiotiedot.find(org => org.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO');
+                    const diagnoses = visit.diagnoosienTiedot.length > 0
+                        ? visit.diagnoosienTiedot.map(d => `<span class="inline-block bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 text-sm font-medium mr-2 mb-2 px-3 py-1 rounded-full">${d.fi} (${d.koodi})</span>`).join('')
+                        : '<span class="text-gray-500 dark:text-gray-400">Ei diagnooseja</span>';
+                    let recordsHTML = '';
+                    if (visit.details && visit.details.potilaskertomukset && visit.details.potilaskertomukset.length > 0) {
+                        recordsHTML = visit.details.potilaskertomukset.map(entry => {
+                            const cleanedNayttomuoto = entry.nayttomuoto ? entry.nayttomuoto.replace(/Kuvaus;\s*/g, '') : '';
+                            return `
+                            <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div class="font-semibold text-gray-700 dark:text-gray-300">${entry.merkinnanTekija.tekija}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">${entry.merkinnanTekija.organisaatioNimi} - ${entry.merkinnanTekija.naytettavaAika}</div>
+                                <div class="mt-3 text-gray-800 dark:text-gray-200 details-content-wrapper">${cleanedNayttomuoto}</div>
+                            </div>`;
+                        }).join('');
+                    } else {
+                        recordsHTML = '<div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700"><p class="text-gray-500 dark:text-gray-400">Ei yksityiskohtaisia potilaskertomuksia.</p></div>';
+                    }
+
+                    let linkedPrescriptionsHTML = '';
+                    if (visit.linkedPrescriptions && visit.linkedPrescriptions.length > 0) {
+                        const prescriptionItems = visit.linkedPrescriptions.map(p => {
+                            const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
+                            return `<li class="py-1">${p.valmiste} ${p.vahvuus} - <span class="text-gray-500 dark:text-gray-400">${latestVersion.annostus.annostusohje}</span></li>`;
+                        }).join('');
+                        linkedPrescriptionsHTML = `
+                        <div class="mt-5">
+                            <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Käyntiin liittyvät reseptit</h4>
+                            <div class="mt-2 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                                <ul class="list-disc list-inside text-sm">${prescriptionItems}</ul>
+                            </div>
+                        </div>`;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300';
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start pb-4 border-b border-gray-200 dark:border-gray-700">
+                                <div>
+                                    <h3 class="text-xl font-bold text-blue-700 dark:text-blue-400">${serviceUnit ? serviceUnit.organisaationNimi : 'Tuntematon yksikkö'}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Käynnin tyyppi: ${visit.hoidonTyyppi || 'Ei määritelty'}</p>
+                                </div>
+                                <span class="text-xl font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">${visit.pvmStr}</span>
+                            </div>
+                            <div class="mt-4">
+                                <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Diagnoosit</h4>
+                                <div class="flex flex-wrap items-center">${diagnoses}</div>
+                            </div>
+                            <div class="mt-5">
+                                <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Potilasmerkinnät</h4>
+                                ${recordsHTML}
+                            </div>
+                            ${linkedPrescriptionsHTML}
+                        </div>`;
+                    visitsContainer.appendChild(card);
+                });
+            };
+
+            const renderPrescriptions = (data) => {
+                prescriptionsContainer.innerHTML = '';
+                const sortedData = data.sort((a,b) => new Date(b.aikaleima) - new Date(a.aikaleima));
+                sortedData.forEach(p => {
+                    const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
+                    const prescriber = latestVersion.maaraaja;
+                    const dispensings = p.versions.toimitukset.map(d => 
+                        `<li class="text-xs py-1">${new Date(d.aikaleima).toLocaleDateString('fi-FI')}: ${d.kauppanimi}, ${d.maara} (${d.apteekinNimiJaPaikkakunta})</li>`
+                    ).join('');
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 flex flex-col';
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <h3 class="font-bold text-lg text-blue-700 dark:text-blue-400">${p.valmiste} ${p.vahvuus}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">${p.laakemuoto}</p>
+                            <div class="mt-4 text-sm">
+                                <p><strong class="font-semibold">Annostus:</strong> ${latestVersion.annostus.annostusohje}</p>
+                                <p><strong class="font-semibold">Määrä:</strong> ${p.maarattyMaara}</p>
+                                <p><strong class="font-semibold">Määrääjä:</strong> ${prescriber.maaraajanEtunimet} ${prescriber.maaraajanSukunimi}</p>
+                                <p><strong class="font-semibold">Pvm:</strong> ${new Date(prescriber.maarayshetki).toLocaleDateString('fi-FI')}</p>
+                                <p><strong class="font-semibold">Voimassa:</strong> ${new Date(p.laakemaaraysVoimassaSaakka).toLocaleDateString('fi-FI')}</p>
+                            </div>
+                            ${dispensings.length > 0 ? `
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-sm">Toimitukset</h4>
+                                <ul class="mt-1 list-disc list-inside text-gray-600 dark:text-gray-400">${dispensings}</ul>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    prescriptionsContainer.appendChild(card);
+                });
+            };
+            
+            const updateSummary = (data) => {
+                const visitCount = data.length;
+                const dates = data.map(v => new Date(v.pvm)).sort((a,b) => a - b);
+                const firstDate = dates[0]?.toLocaleDateString('fi-FI') || 'N/A';
+                const lastDate = dates[dates.length - 1]?.toLocaleDateString('fi-FI') || 'N/A';
+                const uniqueDiagnoses = new Set(data.flatMap(v => v.diagnoosienTiedot.map(d => d.fi))).size;
+
+                summarySection.innerHTML = `
+                    <div>
+                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">${visitCount}</p>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Käyntiä yhteensä</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">${uniqueDiagnoses}</p>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Yksilöllistä diagnoosia</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-blue-600 dark:text-blue-400">${firstDate}</p>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Ensimmäinen kirjaus</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-blue-600 dark:text-blue-400">${lastDate}</p>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Viimeisin kirjaus</p>
+                    </div>
+                `;
+            };
+
+            const linkData = (visits, prescriptions) => {
+                if (!prescriptions || prescriptions.length === 0) return;
+                visits.forEach(visit => {
+                    visit.linkedPrescriptions = [];
+                    const visitDate = visit.pvm.substring(0, 10);
+                    prescriptions.forEach(p => {
+                        const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
+                        if (latestVersion && latestVersion.maaraaja.maarayshetki) {
+                            const prescriptionDate = latestVersion.maaraaja.maarayshetki.substring(0, 10);
+                            if (visitDate === prescriptionDate) {
+                                visit.linkedPrescriptions.push(p);
+                            }
+                        }
+                    });
+                });
+            };
+
+            const populateFilters = (data) => {
+                const diagnoses = new Set();
+                const locations = new Set();
+                const persons = new Set();
+
+                data.forEach(visit => {
+                    visit.diagnoosienTiedot.forEach(d => diagnoses.add(d.fi));
+                    visit.organisaatiotiedot.forEach(o => {
+                        if (o.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO') locations.add(o.organisaationNimi);
+                    });
+                    visit.details?.potilaskertomukset?.forEach(p => p.merkinnanTekija.tekija && persons.add(p.merkinnanTekija.tekija));
+                });
+
+                const populateCheckboxList = (container, items) => {
+                    container.innerHTML = '';
+                    [...items].sort((a, b) => a.localeCompare(b, 'fi')).forEach(item => {
+                        const id = `${container.id}-${item.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                        const label = document.createElement('label');
+                        label.className = 'flex items-center space-x-2 text-sm cursor-pointer';
+                        label.setAttribute('for', id);
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = id;
+                        checkbox.value = item;
+                        checkbox.className = 'h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 bg-white dark:bg-gray-700';
+
+                        const text = document.createElement('span');
+                        text.textContent = item;
+
+                        label.appendChild(checkbox);
+                        label.appendChild(text);
+                        container.appendChild(label);
+                    });
+                };
+
+                populateCheckboxList(diagnoosiFilterContainer, diagnoses);
+                populateCheckboxList(sijaintiFilterContainer, locations);
+                populateCheckboxList(henkiloFilterContainer, persons);
+            };
+
+            const applyFilters = () => {
+                const getSelected = (container) => 
+                    [...container.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value);
+
+                const selectedDiagnoses = getSelected(diagnoosiFilterContainer);
+                const selectedLocations = getSelected(sijaintiFilterContainer);
+                const selectedPersons = getSelected(henkiloFilterContainer);
+                const searchTerm = keywordSearch.value.toLowerCase();
+
+                filteredData = currentData.filter(visit => {
+                    const diagnosisMatch = selectedDiagnoses.length === 0 || 
+                        visit.diagnoosienTiedot.some(d => selectedDiagnoses.includes(d.fi));
+                    
+                    const locationMatch = selectedLocations.length === 0 ||
+                        visit.organisaatiotiedot.some(o => o.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO' && selectedLocations.includes(o.organisaationNimi));
+
+                    const personMatch = selectedPersons.length === 0 ||
+                        visit.details?.potilaskertomukset?.some(p => p.merkinnanTekija.tekija && selectedPersons.includes(p.merkinnanTekija.tekija));
+                    
+                    const searchMatch = searchTerm === '' || JSON.stringify(visit).toLowerCase().includes(searchTerm);
+
+                    return diagnosisMatch && locationMatch && personMatch && searchMatch;
+                });
+                renderVisits(filteredData);
+            };
+            
+            const updateSwitcherUI = (activeButton) => {
+                const isVisits = activeButton.id === 'tab-visits';
+                switcherBg.style.width = `${activeButton.offsetWidth}px`;
+                switcherBg.style.left = `${activeButton.offsetLeft}px`;
+                
+                tabVisits.classList.toggle('active', isVisits);
+                tabVisits.classList.toggle('text-gray-600', !isVisits);
+                tabVisits.classList.toggle('dark:text-gray-300', !isVisits);
+
+                tabPrescriptions.classList.toggle('active', !isVisits);
+                tabPrescriptions.classList.toggle('text-gray-600', isVisits);
+                tabPrescriptions.classList.toggle('dark:text-gray-300', isVisits);
+
+                visitsSection.classList.toggle('hidden', !isVisits);
+                prescriptionsSection.classList.toggle('hidden', isVisits);
+            };
+
+
+            
+            processDataBtn.addEventListener('click', () => {
+                const rawData = jsonInput.value;
+                const rawPrescriptionData = prescriptionInput.value;
+
+                if (!rawData.trim()) {
+                    errorMessage.textContent = 'Potilastietojen kenttä on tyhjä.';
+                    errorMessage.classList.remove('hidden');
+                    return;
+                }
+                try {
+                    let fixedRawData = rawData.trim();
+                    if (fixedRawData.endsWith(',')) fixedRawData = fixedRawData.slice(0, -1);
+                    if (fixedRawData.startsWith('[') && !fixedRawData.endsWith(']')) {
+                        if (fixedRawData.includes('}]},{')) fixedRawData += '}]}';
+                        else fixedRawData += ']';
+                    }
+                    currentData = JSON.parse(fixedRawData);
+                    if (!Array.isArray(currentData)) throw new Error("Potilastiedot eivät ole taulukko.");
+
+                    if (rawPrescriptionData.trim()) {
+                        let fixedPrescriptionData = rawPrescriptionData.trim();
+                         if (fixedPrescriptionData.endsWith(',')) fixedPrescriptionData = fixedPrescriptionData.slice(0, -1);
+                        if (fixedPrescriptionData.startsWith('[') && !fixedPrescriptionData.endsWith(']')) {
+                            if (fixedPrescriptionData.includes('}]},{')) fixedPrescriptionData += '}]}';
+                            else fixedPrescriptionData += ']';
+                        }
+                        prescriptionData = JSON.parse(fixedPrescriptionData);
+                        if (!Array.isArray(prescriptionData)) throw new Error("Reseptitiedot eivät ole taulukko.");
+                    } else {
+                        prescriptionData = [];
+                    }
+
+                    linkData(currentData, prescriptionData);
+                    filteredData = currentData;
+                    updateSummary(currentData);
+                    populateFilters(currentData);
+                    renderVisits(currentData);
+                    renderPrescriptions(prescriptionData);
+                    
+                    inputSection.classList.add('hidden');
+                    outputSection.classList.remove('hidden');
+                    errorMessage.classList.add('hidden');
+                    exportJsonBtn.disabled = false;
+                    exportPdfBtn.disabled = false;
+                    
+                    
+                    setTimeout(() => updateSwitcherUI(tabVisits), 50);
+
+                } catch (error) {
+                    console.error("Virhe JSON-tietojen jäsentämisessä:", error);
+                    errorMessage.textContent = `Virhe tietojen käsittelyssä: ${error.message}. Tarkista tiedot ja yritä uudelleen.`;
+                    errorMessage.classList.remove('hidden');
+                }
+            });
+
+            resetDataBtn.addEventListener('click', () => {
+                outputSection.classList.add('hidden');
+                inputSection.classList.remove('hidden');
+                visitsContainer.innerHTML = '';
+                prescriptionsContainer.innerHTML = '';
+                jsonInput.value = '';
+                prescriptionInput.value = '';
+                currentData = [];
+                prescriptionData = [];
+                filteredData = [];
+                exportJsonBtn.disabled = true;
+                exportPdfBtn.disabled = true;
+                diagnoosiFilterContainer.innerHTML = '';
+                sijaintiFilterContainer.innerHTML = '';
+                henkiloFilterContainer.innerHTML = '';
+                summarySection.innerHTML = '';
+                keywordSearch.value = '';
+            });
+
+            tabVisits.addEventListener('click', () => updateSwitcherUI(tabVisits));
+            tabPrescriptions.addEventListener('click', () => updateSwitcherUI(tabPrescriptions));
+
+            document.getElementById('filter-section').addEventListener('click', (e) => {
+                if (e.target.matches('button[data-action]')) {
+                    const action = e.target.dataset.action;
+                    const filterContainerId = e.target.dataset.filter;
+                    const container = document.getElementById(filterContainerId);
+                    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(cb => cb.checked = action === 'select-all');
+                    applyFilters();
+                }
+            });
+
+            [diagnoosiFilterContainer, sijaintiFilterContainer, henkiloFilterContainer].forEach(container => {
+                container.addEventListener('change', applyFilters);
+            });
+            keywordSearch.addEventListener('input', applyFilters);
+
+            exportJsonBtn.addEventListener('click', async () => {
+                if (filteredData.length === 0 && prescriptionData.length === 0) return;
+                progressText.textContent = 'Luodaan JSON-tiedostoa...';
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.classList.add('flex');
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                const exportObject = {
+                    potilastiedot: filteredData.map(visit => ({
+                        oid: visit.oid,
+                        paivamaara: visit.pvmStr,
+                        palveluyksikko: visit.organisaatiotiedot.find(org => org.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO')?.organisaationNimi || 'N/A',
+                        diagnoosit: visit.diagnoosienTiedot.map(diag => ({ koodi: diag.koodi, selite: diag.fi })),
+                        merkinnat: visit.details?.potilaskertomukset.map(merkinta => ({
+                            tekija: merkinta.merkinnanTekija.tekija,
+                            organisaatio: merkinta.merkinnanTekija.organisaatioNimi,
+                            ajankohta: merkinta.merkinnanTekija.naytettavaAika,
+                            teksti: merkinta.nayttomuoto?.replace(/Kuvaus;\s*/g, '').replace(/<[^>]*>/g, ' ').replace(/\s\s+/g, ' ').trim() || ''
+                        })) || [],
+                    })),
+                    reseptit: prescriptionData
+                };
+                
+                const dataStr = JSON.stringify(exportObject, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'potilastiedot_vienti.json';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                loadingOverlay.classList.add('hidden');
+                loadingOverlay.classList.remove('flex');
+            });
+
+            exportPdfBtn.addEventListener('click', async () => {
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.classList.add('flex');
+                
+                try {
+                    if (prescriptionsSection.classList.contains('hidden')) {
+                        await exportVisitsToPdf();
+                    } else {
+                        await exportPrescriptionsToPdf();
+                    }
+                } catch (err) {
+                     console.error("Virhe PDF-tiedoston luonnissa:", err);
+                    alert("PDF-tiedoston luonti epäonnistui.");
+                } finally {
+                    loadingOverlay.classList.add('hidden');
+                    loadingOverlay.classList.remove('flex');
+                }
+            });
+
+            const exportVisitsToPdf = async () => {
+                 if (filteredData.length === 0) return;
+                 const { jsPDF } = window.jspdf;
+                 const pdf = new jsPDF('p', 'mm', 'a4');
+                 
+                 const pdfWidth = pdf.internal.pageSize.getWidth();
+                 const pdfHeight = pdf.internal.pageSize.getHeight();
+                 const margin = 10;
+                 const contentWidth = pdfWidth - (margin * 2);
+                 let y = margin;
+                 const lineHeight = 5;
+                 const headingFontSize = 14, subHeadingFontSize = 12, normalFontSize = 10, smallFontSize = 8;
+
+                 const checkPageBreak = (neededHeight) => {
+                     if (y + neededHeight > pdfHeight - margin) {
+                         pdf.addPage();
+                         y = margin;
+                     }
+                 };
+
+                 const sortedData = [...filteredData].sort((a, b) => new Date(b.pvm) - new Date(a.pvm));
+                 const totalVisits = sortedData.length;
+
+                 for (const [index, visit] of sortedData.entries()) {
+                     progressText.textContent = `Luodaan PDF... (${index + 1} / ${totalVisits})`;
+                     await new Promise(resolve => setTimeout(resolve, 10)); 
+
+                     checkPageBreak(40);
+                     if (y > margin) y += lineHeight * 2;
+
+                     const serviceUnit = visit.organisaatiotiedot.find(org => org.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO');
+                     pdf.setFontSize(headingFontSize).setFont(undefined, 'bold');
+                     pdf.text(serviceUnit ? serviceUnit.organisaationNimi : 'Tuntematon yksikkö', margin, y, { maxWidth: contentWidth - 30 });
+                     pdf.setFontSize(normalFontSize).setFont(undefined, 'normal');
+                     pdf.text(visit.pvmStr, pdfWidth - margin, y, { align: 'right' });
+                     y += lineHeight * (pdf.splitTextToSize(serviceUnit ? serviceUnit.organisaationNimi : 'Tuntematon yksikkö', contentWidth - 30).length);
+
+                     checkPageBreak(lineHeight);
+                     pdf.setFontSize(smallFontSize).setTextColor(100);
+                     pdf.text(`Käynnin tyyppi: ${visit.hoidonTyyppi || 'Ei määritelty'}`, margin, y);
+                     y += lineHeight;
+                     
+                     checkPageBreak(lineHeight);
+                     pdf.setDrawColor(220, 220, 220).line(margin, y, pdfWidth - margin, y);
+                     y += lineHeight;
+
+                     checkPageBreak(lineHeight);
+                     pdf.setFontSize(subHeadingFontSize).setFont(undefined, 'bold').setTextColor(0);
+                     pdf.text('Diagnoosit', margin, y);
+                     y += lineHeight;
+                     pdf.setFontSize(normalFontSize).setFont(undefined, 'normal');
+
+                     if (visit.diagnoosienTiedot.length > 0) {
+                         for (const diag of visit.diagnoosienTiedot) {
+                             const diagText = `${diag.fi} (${diag.koodi})`;
+                             const splitText = pdf.splitTextToSize(diagText, contentWidth);
+                             checkPageBreak(splitText.length * lineHeight);
+                             pdf.text(splitText, margin, y);
+                             y += splitText.length * lineHeight;
+                         }
+                     } else {
+                         checkPageBreak(lineHeight);
+                         pdf.setFontSize(smallFontSize).setTextColor(150);
+                         pdf.text('Ei diagnooseja', margin, y);
+                         y += lineHeight;
+                     }
+                     y += lineHeight;
+
+                     if (visit.linkedPrescriptions && visit.linkedPrescriptions.length > 0) {
+                         checkPageBreak(lineHeight * (visit.linkedPrescriptions.length + 1));
+                         pdf.setFontSize(subHeadingFontSize).setFont(undefined, 'bold').setTextColor(0);
+                         pdf.text('Käyntiin liittyvät reseptit', margin, y);
+                         y += lineHeight;
+                         pdf.setFontSize(normalFontSize).setFont(undefined, 'normal');
+                         for (const p of visit.linkedPrescriptions) {
+                              const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
+                              const pText = `- ${p.valmiste} ${p.vahvuus}: ${latestVersion.annostus.annostusohje}`;
+                              const splitText = pdf.splitTextToSize(pText, contentWidth);
+                              checkPageBreak(splitText.length * lineHeight);
+                              pdf.text(splitText, margin, y);
+                              y += splitText.length * lineHeight;
+                         }
+                          y += lineHeight;
+                     }
+
+
+                     checkPageBreak(lineHeight);
+                     pdf.setFontSize(subHeadingFontSize).setFont(undefined, 'bold').setTextColor(0);
+                     pdf.text('Potilasmerkinnät', margin, y);
+                     y += lineHeight;
+
+                     if (visit.details && visit.details.potilaskertomukset && visit.details.potilaskertomukset.length > 0) {
+                         for (const entry of visit.details.potilaskertomukset) {
+                             checkPageBreak(25);
+                             y += lineHeight;
+                             
+                             pdf.setFontSize(normalFontSize).setFont(undefined, 'bold');
+                             pdf.text(entry.merkinnanTekija.tekija, margin, y);
+                             y += lineHeight;
+
+                             checkPageBreak(lineHeight);
+                             pdf.setFontSize(smallFontSize).setFont(undefined, 'normal').setTextColor(100);
+                             pdf.text(`${entry.merkinnanTekija.organisaatioNimi} - ${entry.merkinnanTekija.naytettavaAika}`, margin, y);
+                             y += lineHeight;
+                             pdf.setTextColor(0);
+
+                             if (entry.nayttomuoto) {
+                                 const html = entry.nayttomuoto;
+                                 const cleanedHtml = html
+                                     .replace(/<h6>(.*?)<\/h6>/gi, '\n---h6---$1---endh6---\n')
+                                     .replace(/<h5>(.*?)<\/h5>/gi, '\n---h5---$1---endh5---\n')
+                                     .replace(/<br\s*\/?>/gi, '\n')
+                                     .replace(/<\/p>|<\/div>|<\/tr>/gi, '\n')
+                                     .replace(/<\/td>/gi, '  |  ');
+                                 const plainText = cleanedHtml.replace(/<[^>]*>/g, '').replace(/Kuvaus;\s*/g, '').replace(/&nbsp;/g, ' ').trim();
+                                 const textLines = plainText.split('\n');
+                                 
+                                 for (const line of textLines) {
+                                     let currentLine = line.trim();
+                                     if (currentLine === '') continue;
+                                     let isH5 = currentLine.startsWith('---h5---');
+                                     let isH6 = currentLine.startsWith('---h6---');
+                                     if (isH5) currentLine = currentLine.replace(/---h5---/g, '').replace(/---endh5---/g, '');
+                                     if (isH6) currentLine = currentLine.replace(/---h6---/g, '').replace(/---endh6---/g, '');
+                                     if (isH5) pdf.setFontSize(subHeadingFontSize).setFont(undefined, 'bold');
+                                     else if (isH6) pdf.setFontSize(normalFontSize).setFont(undefined, 'bold');
+                                     else pdf.setFontSize(normalFontSize).setFont(undefined, 'normal');
+
+                                     const splitText = pdf.splitTextToSize(currentLine, contentWidth);
+                                     checkPageBreak(splitText.length * lineHeight);
+                                     pdf.text(splitText, margin, y);
+                                     y += (splitText.length * lineHeight);
+                                 }
+                             }
+                             y += lineHeight;
+                         }
+                     } else {
+                          checkPageBreak(lineHeight);
+                          pdf.setFontSize(smallFontSize).setTextColor(150);
+                          pdf.text('Ei yksityiskohtaisia potilaskertomuksia.', margin, y);
+                          y += lineHeight;
+                     }
+                 }
+                 pdf.save('potilastiedot_suodatettu.pdf');
+            };
+
+            const exportPrescriptionsToPdf = async () => {
+                if (prescriptionData.length === 0) return;
+                 const { jsPDF } = window.jspdf;
+                 const pdf = new jsPDF('p', 'mm', 'a4');
+                 const pdfWidth = pdf.internal.pageSize.getWidth();
+                 const pdfHeight = pdf.internal.pageSize.getHeight();
+                 const margin = 10;
+                 const contentWidth = pdfWidth - (margin * 2);
+                 let y = margin;
+                 const lineHeight = 5;
+                 const headingFontSize = 12, normalFontSize = 10, smallFontSize = 8;
+
+                 const checkPageBreak = (neededHeight) => {
+                     if (y + neededHeight > pdfHeight - margin) {
+                         pdf.addPage();
+                         y = margin;
+                     }
+                 };
+
+                const sortedData = [...prescriptionData].sort((a,b) => new Date(b.aikaleima) - new Date(a.aikaleima));
+                const totalPrescriptions = sortedData.length;
+
+                for (const [index, p] of sortedData.entries()) {
+                    progressText.textContent = `Luodaan PDF... (${index + 1} / ${totalPrescriptions})`;
+                    await new Promise(resolve => setTimeout(resolve, 10));
+
+                    checkPageBreak(35);
+                    if (y > margin) {
+                        pdf.setDrawColor(220, 220, 220).line(margin, y, pdfWidth - margin, y);
+                        y += lineHeight * 2;
+                    }
+
+                    const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
+                    const prescriber = latestVersion.maaraaja;
+
+                    pdf.setFontSize(headingFontSize).setFont(undefined, 'bold');
+                    pdf.text(`${p.valmiste} ${p.vahvuus}`, margin, y);
+                    y += lineHeight;
+
+                    checkPageBreak(lineHeight);
+                    pdf.setFontSize(normalFontSize).setFont(undefined, 'normal').setTextColor(100);
+                    pdf.text(p.laakemuoto, margin, y);
+                    y += lineHeight * 1.5;
+                    pdf.setTextColor(0);
+
+                    const details = [
+                        { label: 'Annostus', value: latestVersion.annostus.annostusohje },
+                        { label: 'Määrä', value: p.maarattyMaara },
+                        { label: 'Määrääjä', value: `${prescriber.maaraajanEtunimet} ${prescriber.maaraajanSukunimi}` },
+                        { label: 'Pvm', value: new Date(prescriber.maarayshetki).toLocaleDateString('fi-FI') },
+                        { label: 'Voimassa', value: new Date(p.laakemaaraysVoimassaSaakka).toLocaleDateString('fi-FI') },
+                    ];
+
+                    for (const detail of details) {
+                        const text = `${detail.label}: ${detail.value}`;
+                        const splitText = pdf.splitTextToSize(text, contentWidth);
+                        checkPageBreak(splitText.length * lineHeight);
+                        pdf.setFontSize(normalFontSize).setFont(undefined, 'normal');
+                        pdf.text(splitText, margin, y);
+                        y += splitText.length * lineHeight;
+                    }
+
+                    if (p.versions.toimitukset.length > 0) {
+                        y += lineHeight;
+                        checkPageBreak(lineHeight);
+                        pdf.setFontSize(normalFontSize).setFont(undefined, 'bold');
+                        pdf.text('Toimitukset', margin, y);
+                        y += lineHeight;
+                        pdf.setFontSize(smallFontSize).setFont(undefined, 'normal');
+
+                        for (const d of p.versions.toimitukset) {
+                            const dText = `- ${new Date(d.aikaleima).toLocaleDateString('fi-FI')}: ${d.kauppanimi}, ${d.maara} (${d.apteekinNimiJaPaikkakunta})`;
+                            const splitText = pdf.splitTextToSize(dText, contentWidth);
+                            checkPageBreak(splitText.length * lineHeight);
+                            pdf.text(splitText, margin, y);
+                            y += splitText.length * lineHeight;
+                        }
+                    }
+                }
+                pdf.save('reseptit_suodatettu.pdf');
+            };
+        });
+    </script>
+</body>
+</html>
