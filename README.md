@@ -62,10 +62,8 @@ Työkalu mahdollistaa tällä hetkellä vain potilastietojen(tarkemmin Palveluta
 
 ## Aikavälin muuttaminen
 
-Jos haluat ladata tietoja eri aikaväliltä, muokkaa scriptien alussa olevia päivämääriä:
+Scriptit hakevat tiedot 1.5.2010-nykypäivä ajalta. Alkupäivämäärä on tuo, sillä kanta ilmoittaa, että tietoja ei ole saatavilla ennen sitä. Voit muuttaa scripteissä olevaa päivämäärää, jos haluat hakea tietoja alkaen jostain toisesta ajankohdasta. 
 
 ```javascript
-const ranges = [
-  ['2020-01-01', '2024-12-31']  // Muuta nämä haluamiksesi
-];
+    const startDate = new Date('2010-05-01'); //muuta tätä päivämäärää muuttaaksesi haun alkuajankohtaa.
 ```
