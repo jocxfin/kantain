@@ -83,6 +83,19 @@
         .dark .switcher-btn.active {
             @apply text-gray-900;
         }
+        
+        .drop-zone-active {
+            @apply border-blue-500 bg-blue-50 dark:bg-blue-900/30;
+        }
+        
+        .drop-zone {
+            transition: all 0.2s ease-in-out;
+            height: 10rem !important;
+        }
+        
+        .drop-zone:hover {
+            @apply border-blue-400 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20;
+        }
     </style>
 </head>
 <body class="antialiased bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300">
@@ -127,11 +140,27 @@
             <div class="grid md:grid-cols-2 gap-8 mt-6 text-left">
                 <div>
                     <label for="json-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Potilastiedot (JSON)</label>
-                    <textarea id="json-input" class="w-full h-72 p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150" placeholder='[{"oid":"...", "pvm":"...", ...}]'></textarea>
+                    <div id="json-drop-zone" class="drop-zone w-full h-72 border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg cursor-pointer flex flex-col items-center justify-center">
+                        <svg class="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Pudota JSON-tiedosto tähän</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-500">tai klikkaa valitaksesi tiedosto</p>
+                        <input type="file" id="json-file-input" accept=".json" class="hidden">
+                    </div>
+                    <textarea id="json-input" class="w-full h-72 p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 mt-4" placeholder='[{"oid":"...", "pvm":"...", ...}]'></textarea>
                 </div>
                  <div>
                     <label for="prescription-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reseptitiedot (JSON)</label>
-                    <textarea id="prescription-input" class="w-full h-72 p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150" placeholder='[{"setId":"...", "valmiste":"...", ...}]'></textarea>
+                    <div id="prescription-drop-zone" class="drop-zone w-full h-72 border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg cursor-pointer flex flex-col items-center justify-center">
+                        <svg class="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Pudota JSON-tiedosto tähän</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-500">tai klikkaa valitaksesi tiedosto</p>
+                        <input type="file" id="prescription-file-input" accept=".json" class="hidden">
+                    </div>
+                    <textarea id="prescription-input" class="w-full h-72 p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 mt-4" placeholder='[{"setId":"...", "valmiste":"...", ...}]'></textarea>
                 </div>
             </div>
             <div id="error-message" class="mt-4 text-red-600 font-medium hidden"></div>
@@ -241,6 +270,11 @@
             const themeToggle = document.getElementById('theme-toggle');
             const lightIcon = document.getElementById('theme-icon-light');
             const darkIcon = document.getElementById('theme-icon-dark');
+            const jsonDropZone = document.getElementById('json-drop-zone');
+            const prescriptionDropZone = document.getElementById('prescription-drop-zone');
+            const jsonFileInput = document.getElementById('json-file-input');
+            const prescriptionFileInput = document.getElementById('prescription-file-input');
+            
             let currentData = [];
             let prescriptionData = [];
             let filteredData = [];
@@ -265,6 +299,77 @@
                 const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
                 localStorage.setItem('theme', newTheme);
                 applyTheme(newTheme);
+            });
+
+            const handleFileDrop = (e, targetTextarea) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type === 'application/json' || file.name.endsWith('.json')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            targetTextarea.value = event.target.result;
+                        };
+                        reader.readAsText(file);
+                    } else {
+                        alert('Vain JSON-tiedostot ovat tuettuja.');
+                    }
+                }
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            };
+
+            const handleDragEnter = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/30');
+            };
+
+            const handleDragLeave = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/30');
+            };
+
+            jsonDropZone.addEventListener('dragover', handleDragOver);
+            jsonDropZone.addEventListener('dragenter', handleDragEnter);
+            jsonDropZone.addEventListener('dragleave', handleDragLeave);
+            jsonDropZone.addEventListener('drop', (e) => handleFileDrop(e, jsonInput));
+
+            prescriptionDropZone.addEventListener('dragover', handleDragOver);
+            prescriptionDropZone.addEventListener('dragenter', handleDragEnter);
+            prescriptionDropZone.addEventListener('dragleave', handleDragLeave);
+            prescriptionDropZone.addEventListener('drop', (e) => handleFileDrop(e, prescriptionInput));
+
+            jsonDropZone.addEventListener('click', () => jsonFileInput.click());
+            prescriptionDropZone.addEventListener('click', () => prescriptionFileInput.click());
+
+            jsonFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        jsonInput.value = event.target.result;
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            prescriptionFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        prescriptionInput.value = event.target.result;
+                    };
+                    reader.readAsText(file);
+                }
             });
 
             
