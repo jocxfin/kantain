@@ -20,18 +20,32 @@
     console.log('Aloitetaan palvelutapahtumien lataus...');
     console.log(`Haetaan tapahtumia aikaväliltä ${queryRanges[0][0]} - ${queryRanges[0][1]}`);
 
-    async function fetchEventList(start, end) {
-      const listUrl = `/api/arkistopalvelu/palvelutapahtumat?alkuaika=${start}&loppuaika=${end}`;
-      const listResp = await fetch(listUrl, { credentials: 'include', headers });
-      if (!listResp.ok) {
-        console.warn(`Failed to fetch event list for ${start}-${end}: ${listResp.status}`);
-        return [];
-      }
-      return await listResp.json();
+    async function fetchAllEventPages(start, end) {
+      const pageSize = 30;
+      let allEvents = [];
+      let page = 1;
+      let maxPages = 1;
+      
+      do {
+        const listUrl = `/api/arkistopalvelu/v2/palvelutapahtumat?alkuaika=${start}&loppuaika=${end}&page=${page}&size=${pageSize}&tyhjatKaynnit=false&jarjestys=VIIMEKSI_PAIVITETTY_ENSIN`;
+        const listResp = await fetch(listUrl, { credentials: 'include', headers });
+        if (!listResp.ok) {
+          console.warn(`Failed to fetch event list page ${page} for ${start}-${end}: ${listResp.status}`);
+          break;
+        }
+        const data = await listResp.json();
+        maxPages = data.maxPages || 1;
+        const events = data.palvelutapahtumat || [];
+        allEvents = allEvents.concat(events);
+        console.log(`Ladattu sivu ${page}/${maxPages} (${events.length} tapahtumaa)`);
+        page++;
+      } while (page <= maxPages);
+      
+      return allEvents;
     }
 
     async function fetchEventDetails(eventId) {
-      const detailsUrl = `/api/arkistopalvelu/palvelutapahtumat/${eventId}/terveystiedot?vainTutkimuksia=false`;
+      const detailsUrl = `/api/arkistopalvelu/v2/palvelutapahtumat/${eventId}/terveystiedot`;
       const detResp = await fetch(detailsUrl, { credentials: 'include', headers });
       if (!detResp.ok) {
         console.warn(`Skipped ${eventId}: ${detResp.status}`);
@@ -45,6 +59,11 @@
       }
     }
 
+    function formatDateStr(dateString) {
+      const d = new Date(dateString);
+      return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+    }
+
     async function processEvents(events) {
       let totalProcessed = 0;
       
@@ -54,7 +73,13 @@
         
         const details = await fetchEventDetails(id);
         if (details) {
-          results.push({ ...ev, details });
+          const normalizedEvent = {
+            ...ev,
+            pvm: ev.alkuPvm,
+            pvmStr: formatDateStr(ev.alkuPvm),
+            details
+          };
+          results.push(normalizedEvent);
         }
         
         totalProcessed++;
@@ -69,10 +94,10 @@
     let totalProcessed = 0;
     
     for (const [start, end] of queryRanges) {
-      const events = await fetchEventList(start, end);
+      const events = await fetchAllEventPages(start, end);
       
       if (events.length > 0) {
-        console.log(`Löydettiin ${events.length} tapahtumaa. Ladataan yksityiskohtia...`);
+        console.log(`Löydettiin yhteensä ${events.length} tapahtumaa. Ladataan yksityiskohtia...`);
         const processed = await processEvents(events);
         totalProcessed += processed;
       } else {

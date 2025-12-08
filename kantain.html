@@ -376,7 +376,7 @@
             const renderVisits = (data) => {
                 visitsContainer.innerHTML = '';
                 const sortedData = data.sort((a, b) => new Date(b.pvm) - new Date(a.pvm));
-                sortedData.forEach(visit => {
+                sortedData.forEach((visit, index) => {
                     const serviceUnit = visit.organisaatiotiedot.find(org => org.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO');
                     const diagnoses = visit.diagnoosienTiedot.length > 0
                         ? visit.diagnoosienTiedot.map(d => `<span class="inline-block bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 text-sm font-medium mr-2 mb-2 px-3 py-1 rounded-full">${d.fi} (${d.koodi})</span>`).join('')
@@ -384,11 +384,19 @@
                     let recordsHTML = '';
                     if (visit.details && visit.details.potilaskertomukset && visit.details.potilaskertomukset.length > 0) {
                         recordsHTML = visit.details.potilaskertomukset.map(entry => {
-                            const cleanedNayttomuoto = entry.nayttomuoto ? entry.nayttomuoto.replace(/Kuvaus;\s*/g, '') : '';
+                            let cleanedNayttomuoto = entry.nayttomuoto ? entry.nayttomuoto.replace(/Kuvaus;\s*/g, '') : '';
+                            cleanedNayttomuoto = cleanedNayttomuoto
+                                .replace(/^######\s+(.+)$/gm, '<h6>$1</h6>')
+                                .replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>')
+                                .replace(/^####\s+(.+)$/gm, '<h5>$1</h5>')
+                                .replace(/\n/g, '<br>');
+                            const tekija = entry.merkinnanTekija.tekija || entry.merkinnanTekija.nimi || '';
+                            const organisaatio = entry.merkinnanTekija.organisaatioNimi || entry.merkinnanTekija.palveluyksikko || '';
+                            const aika = entry.merkinnanTekija.naytettavaAika || entry.merkinnanTekija.tapahtumaAika || '';
                             return `
                             <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div class="font-semibold text-gray-700 dark:text-gray-300">${entry.merkinnanTekija.tekija}</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">${entry.merkinnanTekija.organisaatioNimi} - ${entry.merkinnanTekija.naytettavaAika}</div>
+                                <div class="font-semibold text-gray-700 dark:text-gray-300">${tekija}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">${organisaatio} - ${aika}</div>
                                 <div class="mt-3 text-gray-800 dark:text-gray-200 details-content-wrapper">${cleanedNayttomuoto}</div>
                             </div>`;
                         }).join('');
@@ -400,19 +408,23 @@
                     if (visit.linkedPrescriptions && visit.linkedPrescriptions.length > 0) {
                         const prescriptionItems = visit.linkedPrescriptions.map(p => {
                             const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
-                            return `<li class="py-1">${p.valmiste} ${p.vahvuus} - <span class="text-gray-500 dark:text-gray-400">${latestVersion.annostus.annostusohje}</span></li>`;
+                            return `<div class="prescription-link-box py-2 px-3 mb-2 last:mb-0 bg-blue-100 dark:bg-blue-800/50 rounded-md cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-700/50 transition-colors" data-prescription-id="${p.setId}">
+                                <span class="font-medium text-blue-700 dark:text-blue-300">${p.valmiste} ${p.vahvuus}</span>
+                                <span class="text-gray-600 dark:text-gray-400 text-sm ml-2">${latestVersion.annostus.annostusohje}</span>
+                            </div>`;
                         }).join('');
                         linkedPrescriptionsHTML = `
                         <div class="mt-5">
                             <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Käyntiin liittyvät reseptit</h4>
-                            <div class="mt-2 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                                <ul class="list-disc list-inside text-sm">${prescriptionItems}</ul>
+                            <div class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                                ${prescriptionItems}
                             </div>
                         </div>`;
                     }
 
                     const card = document.createElement('div');
-                    card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300';
+                    card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col transition-all duration-500';
+                    card.id = `visit-${visit.tempSetId || visit.oid || index}`;
                     card.innerHTML = `
                         <div class="flex-grow">
                             <div class="flex justify-between items-start pb-4 border-b border-gray-200 dark:border-gray-700">
@@ -446,8 +458,17 @@
                         `<li class="text-xs py-1">${new Date(d.aikaleima).toLocaleDateString('fi-FI')}: ${d.kauppanimi}, ${d.maara} (${d.apteekinNimiJaPaikkakunta})</li>`
                     ).join('');
 
+                    const linkedVisitHTML = p.linkedVisitId ? `
+                        <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div class="visit-link-box p-2 bg-green-50 dark:bg-green-900/30 rounded-md cursor-pointer hover:bg-green-100 dark:hover:bg-green-800/40 transition-colors border border-green-200 dark:border-green-800" data-visit-id="${p.linkedVisitId}">
+                                <span class="text-green-700 dark:text-green-400 text-sm font-medium">📋 Näytä potilaskäynti (${new Date(prescriber.maarayshetki).toLocaleDateString('fi-FI')})</span>
+                            </div>
+                        </div>
+                    ` : '';
+
                     const card = document.createElement('div');
-                    card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 flex flex-col';
+                    card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 flex flex-col transition-all duration-500';
+                    card.id = `prescription-${p.setId}`;
                     card.innerHTML = `
                         <div class="flex-grow">
                             <h3 class="font-bold text-lg text-blue-700 dark:text-blue-400">${p.valmiste} ${p.vahvuus}</h3>
@@ -465,6 +486,7 @@
                                 <ul class="mt-1 list-disc list-inside text-gray-600 dark:text-gray-400">${dispensings}</ul>
                             </div>
                             ` : ''}
+                            ${linkedVisitHTML}
                         </div>
                     `;
                     prescriptionsContainer.appendChild(card);
@@ -500,15 +522,18 @@
 
             const linkData = (visits, prescriptions) => {
                 if (!prescriptions || prescriptions.length === 0) return;
+                prescriptions.forEach(p => p.linkedVisitId = null);
                 visits.forEach(visit => {
                     visit.linkedPrescriptions = [];
                     const visitDate = visit.pvm.substring(0, 10);
+                    const visitId = visit.tempSetId || visit.oid;
                     prescriptions.forEach(p => {
                         const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
                         if (latestVersion && latestVersion.maaraaja.maarayshetki) {
                             const prescriptionDate = latestVersion.maaraaja.maarayshetki.substring(0, 10);
                             if (visitDate === prescriptionDate) {
                                 visit.linkedPrescriptions.push(p);
+                                p.linkedVisitId = visitId;
                             }
                         }
                     });
@@ -525,7 +550,10 @@
                     visit.organisaatiotiedot.forEach(o => {
                         if (o.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO') locations.add(o.organisaationNimi);
                     });
-                    visit.details?.potilaskertomukset?.forEach(p => p.merkinnanTekija.tekija && persons.add(p.merkinnanTekija.tekija));
+                    visit.details?.potilaskertomukset?.forEach(p => {
+                        const tekija = p.merkinnanTekija.tekija || p.merkinnanTekija.nimi;
+                        if (tekija) persons.add(tekija);
+                    });
                 });
 
                 const populateCheckboxList = (container, items) => {
@@ -573,7 +601,10 @@
                         visit.organisaatiotiedot.some(o => o.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO' && selectedLocations.includes(o.organisaationNimi));
 
                     const personMatch = selectedPersons.length === 0 ||
-                        visit.details?.potilaskertomukset?.some(p => p.merkinnanTekija.tekija && selectedPersons.includes(p.merkinnanTekija.tekija));
+                        visit.details?.potilaskertomukset?.some(p => {
+                            const tekija = p.merkinnanTekija.tekija || p.merkinnanTekija.nimi;
+                            return tekija && selectedPersons.includes(tekija);
+                        });
                     
                     const searchMatch = searchTerm === '' || JSON.stringify(visit).toLowerCase().includes(searchTerm);
 
@@ -677,6 +708,45 @@
 
             tabVisits.addEventListener('click', () => updateSwitcherUI(tabVisits));
             tabPrescriptions.addEventListener('click', () => updateSwitcherUI(tabPrescriptions));
+            visitsContainer.addEventListener('click', (e) => {
+                const linkBox = e.target.closest('.prescription-link-box');
+                if (linkBox) {
+                    e.preventDefault();
+                    const prescriptionId = linkBox.dataset.prescriptionId;
+                    const targetCard = document.getElementById(`prescription-${prescriptionId}`);
+                    
+                    if (targetCard) {
+                        updateSwitcherUI(tabPrescriptions);
+                        setTimeout(() => {
+                            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            targetCard.classList.add('ring-4', 'ring-blue-500', 'ring-opacity-75');
+                            setTimeout(() => {
+                                targetCard.classList.remove('ring-4', 'ring-blue-500', 'ring-opacity-75');
+                            }, 2000);
+                        }, 100);
+                    }
+                }
+            });
+
+            prescriptionsContainer.addEventListener('click', (e) => {
+                const linkBox = e.target.closest('.visit-link-box');
+                if (linkBox) {
+                    e.preventDefault();
+                    const visitId = linkBox.dataset.visitId;
+                    const targetCard = document.getElementById(`visit-${visitId}`);
+                    
+                    if (targetCard) {
+                        updateSwitcherUI(tabVisits);
+                        setTimeout(() => {
+                            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            targetCard.classList.add('ring-4', 'ring-green-500', 'ring-opacity-75');
+                            setTimeout(() => {
+                                targetCard.classList.remove('ring-4', 'ring-green-500', 'ring-opacity-75');
+                            }, 2000);
+                        }, 100);
+                    }
+                }
+            });
 
             document.getElementById('filter-section').addEventListener('click', (e) => {
                 if (e.target.matches('button[data-action]')) {
@@ -708,9 +778,9 @@
                         palveluyksikko: visit.organisaatiotiedot.find(org => org.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO')?.organisaationNimi || 'N/A',
                         diagnoosit: visit.diagnoosienTiedot.map(diag => ({ koodi: diag.koodi, selite: diag.fi })),
                         merkinnat: visit.details?.potilaskertomukset.map(merkinta => ({
-                            tekija: merkinta.merkinnanTekija.tekija,
-                            organisaatio: merkinta.merkinnanTekija.organisaatioNimi,
-                            ajankohta: merkinta.merkinnanTekija.naytettavaAika,
+                            tekija: merkinta.merkinnanTekija.tekija || merkinta.merkinnanTekija.nimi,
+                            organisaatio: merkinta.merkinnanTekija.organisaatioNimi || merkinta.merkinnanTekija.palveluyksikko,
+                            ajankohta: merkinta.merkinnanTekija.naytettavaAika || merkinta.merkinnanTekija.tapahtumaAika,
                             teksti: merkinta.nayttomuoto?.replace(/Kuvaus;\s*/g, '').replace(/<[^>]*>/g, ' ').replace(/\s\s+/g, ' ').trim() || ''
                         })) || [],
                     })),
@@ -846,13 +916,17 @@
                              checkPageBreak(25);
                              y += lineHeight;
                              
+                             const tekija = entry.merkinnanTekija.tekija || entry.merkinnanTekija.nimi || '';
+                             const organisaatio = entry.merkinnanTekija.organisaatioNimi || entry.merkinnanTekija.palveluyksikko || '';
+                             const aika = entry.merkinnanTekija.naytettavaAika || entry.merkinnanTekija.tapahtumaAika || '';
+                             
                              pdf.setFontSize(normalFontSize).setFont(undefined, 'bold');
-                             pdf.text(entry.merkinnanTekija.tekija, margin, y);
+                             pdf.text(tekija, margin, y);
                              y += lineHeight;
 
                              checkPageBreak(lineHeight);
                              pdf.setFontSize(smallFontSize).setFont(undefined, 'normal').setTextColor(100);
-                             pdf.text(`${entry.merkinnanTekija.organisaatioNimi} - ${entry.merkinnanTekija.naytettavaAika}`, margin, y);
+                             pdf.text(`${organisaatio} - ${aika}`, margin, y);
                              y += lineHeight;
                              pdf.setTextColor(0);
 
