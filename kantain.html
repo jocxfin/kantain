@@ -97,6 +97,35 @@
         .drop-zone:hover {
             @apply border-blue-400 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20;
         }
+        #labs-section .card{padding:24px;border-radius:12px;box-shadow:0 4px 6px #0001;margin-bottom:24px}
+        #labs-section h2{font-size:20px;font-weight:700;margin:0 0 8px}
+        #labs-section .muted,#labs-section .point-info{color:inherit;opacity:.75;font-size:14px;margin:12px 0}
+        #labs-section .warning{color:#b45309}
+        #labs-section .chart svg{display:block;width:100%;height:auto;min-height:180px}
+        #labs-section svg text{fill:currentColor;font-size:12px}
+        #labs-section .grid-line{stroke:#d1d5db;stroke-width:1;opacity:.55}
+        #labs-section .point-info:empty{display:none}
+        #labs-section circle{cursor:pointer}
+        #labs-section circle:focus{outline:none;stroke:#d97706;stroke-width:4}
+        #labs-section .table-wrap{overflow:auto}
+        #labs-section table{width:100%;border-collapse:collapse;font-size:14px;margin-top:16px}
+        #labs-section td,#labs-section th{text-align:left;padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;min-width:100px}
+        #labs-section pre{white-space:pre-wrap;overflow-wrap:anywhere;min-width:240px;max-width:600px;font-size:12px}
+        #labs-section summary{cursor:pointer;color:#2563eb;padding:8px 0}
+        #labs-section .lab-knowledge-text{line-height:1.6;max-width:75ch}
+        #labs-section .chart{position:relative}
+        #labs-section .lab-tooltip{position:absolute;transform:translate(-50%,-120%);z-index:5;pointer-events:none;background:#111827;color:white;padding:8px 12px;border-radius:8px;font-size:13px;max-width:80%;box-shadow:0 2px 8px #0003}
+        #import-mode button[aria-pressed="true"]{background:white;color:#111827;box-shadow:0 1px 3px #0002}
+        .dark #import-mode button[aria-pressed="true"]{background:#2563eb;color:white}
+        [hidden]{display:none!important}
+        #labs-section .lab-statement{white-space:pre-wrap;overflow-wrap:anywhere}
+        #labs-section dt{font-weight:600;margin-top:8px}
+        #labs-section dd{margin:0;overflow-wrap:anywhere}
+        .dark #labs-section .muted,.dark #labs-section .point-info{color:#9ca3af}
+        .dark #labs-section .grid-line{stroke:#4b5563}
+        .dark #labs-section td,.dark #labs-section th{border-color:#4b5563}
+        .dark #labs-section summary{color:#60a5fa}
+        @media(max-width:640px){#labs-section .card{padding:16px}#view-switcher .switcher-btn{padding-left:12px;padding-right:12px}}
     </style>
 </head>
 <body class="antialiased bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300">
@@ -139,12 +168,21 @@
                             <button id="export-pdf-option-year-zip" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 border-t border-gray-200 dark:border-gray-700">
                                 Vie PDF per vuosi (ZIP)
                             </button>
+                            <button id="export-pdf-option-history" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 border-t border-gray-200 dark:border-gray-700">Koko historia ja linkitetyt tiedot</button>
                         </div>
                     </div>
-                    <button id="export-json" class="flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                    <div id="export-json-dropdown" class="relative">
+                        <div class="flex rounded-lg shadow-md">                    <button id="export-json" class="flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-l-lg hover:bg-blue-700 transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
                         <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        Vie JSON
+                        <span id="export-json-label">Vie JSON</span>
                     </button>
+                            <button id="export-json-toggle" class="bg-blue-600 text-white px-3 rounded-r-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed" aria-haspopup="true" aria-expanded="false" aria-label="JSON-viennin valikko" disabled><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/></svg></button>
+                        </div>
+                        <div id="export-json-menu" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-30">
+                            <button id="export-json-original" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Alkuperäiset tiedot</button>
+                            <button id="export-json-linked" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 border-t border-gray-200 dark:border-gray-700">Kaikki tiedot linkitettyinä</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -152,8 +190,12 @@
 
         <div id="input-section" class="container mx-auto p-8 flex flex-col items-center">
         <div class="w-full max-w-6xl bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg text-center">
-             <h2 class="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">Liitä tiedot</h2>
-            <div class="grid md:grid-cols-2 gap-8 mt-6 text-left">
+             <h2 class="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">Lataa tiedot</h2>
+            <div id="import-mode" class="w-max mx-auto mt-6 p-1 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center" role="group" aria-label="Tiedostojen määrä">
+                <button type="button" id="import-three" aria-pressed="true" class="px-6 py-2 text-sm font-semibold rounded-full">3 datasettiä</button>
+                <button type="button" id="import-one" aria-pressed="false" class="px-6 py-2 text-sm font-semibold rounded-full">Yksi datasetti</button>
+            </div>
+            <div id="separate-import">            <div class="grid md:grid-cols-2 gap-8 mt-6 text-left">
                 <div>
                     <label for="json-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Potilastiedot (JSON)</label>
                     <div id="json-drop-zone" class="drop-zone w-full h-72 border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg cursor-pointer flex flex-col items-center justify-center">
@@ -164,7 +206,7 @@
                         <p class="text-xs text-gray-500 dark:text-gray-500">tai klikkaa valitaksesi tiedosto</p>
                         <input type="file" id="json-file-input" accept=".json" class="hidden">
                     </div>
-                    <textarea id="json-input" class="w-full h-72 p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 mt-4" placeholder='[{"oid":"...", "pvm":"...", ...}]'></textarea>
+                    <textarea id="json-input" hidden aria-hidden="true"></textarea><p id="visit-filename" class="mt-2 text-sm text-gray-500" role="status"></p>
                 </div>
                  <div>
                     <label for="prescription-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reseptitiedot (JSON)</label>
@@ -176,8 +218,30 @@
                         <p class="text-xs text-gray-500 dark:text-gray-500">tai klikkaa valitaksesi tiedosto</p>
                         <input type="file" id="prescription-file-input" accept=".json" class="hidden">
                     </div>
-                    <textarea id="prescription-input" class="w-full h-72 p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 mt-4" placeholder='[{"setId":"...", "valmiste":"...", ...}]'></textarea>
+                    <textarea id="prescription-input" hidden aria-hidden="true"></textarea><p id="prescription-filename" class="mt-2 text-sm text-gray-500" role="status"></p>
                 </div>
+            </div>
+            <div class="mt-6 text-left">
+                <label for="lab-file" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Laboratoriotulokset</label>
+                <div id="lab-drop-zone" class="drop-zone w-full border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg cursor-pointer flex flex-col items-center justify-center" tabindex="0" role="button" aria-label="Valitse laboratoriotulosten JSON-tiedosto">
+                    <svg class="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Pudota JSON-tiedosto tähän</p>
+                    <p class="text-xs text-gray-500">tai klikkaa valitaksesi tiedosto</p>
+                    <input type="file" id="lab-file" accept=".json,application/json" class="hidden">
+                </div>
+                <p id="lab-filename" class="mt-2 text-sm text-gray-500" role="status"></p>
+                <textarea id="lab-input" hidden aria-hidden="true"></textarea>
+            </div>
+            </div>
+            <div id="combined-import" hidden class="mt-6 text-left">
+                <label for="combined-file" class="block text-sm font-medium mb-2">Potilastiedot, reseptit ja laboratoriotulokset</label>
+                <div id="combined-drop-zone" tabindex="0" role="button" aria-label="Valitse yhdistetty tiedosto" class="drop-zone w-full h-72 border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg cursor-pointer flex flex-col items-center justify-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Pudota tiedosto tähän</p>
+                    <p class="text-xs text-gray-500">tai klikkaa valitaksesi tiedosto</p>
+                    <input type="file" id="combined-file" accept=".json,application/json" hidden>
+                </div>
+                <p id="combined-filename" class="mt-2 text-sm text-gray-500" role="status"></p>
+                <textarea id="combined-input" hidden aria-hidden="true"></textarea>
             </div>
             <div id="error-message" class="mt-4 text-red-600 font-medium hidden"></div>
             <button id="process-data" class="mt-8 w-full sm:w-auto inline-flex items-center justify-center bg-green-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-green-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
@@ -211,6 +275,7 @@
                 <div id="switcher-bg" class="absolute h-[85%] top-[7.5%] left-0 bg-white dark:bg-blue-600 rounded-full shadow-md transition-all duration-300 ease-in-out"></div>
                 <button id="tab-visits" class="switcher-btn relative z-10 px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-300 text-gray-600">Potilaskäynnit</button>
                 <button id="tab-prescriptions" class="switcher-btn relative z-10 px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-300 text-gray-600">Reseptit</button>
+                <button id="tab-labs" class="switcher-btn relative z-10 px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-300 text-gray-600">Laboratoriotulokset</button>
             </div>
         </div>
 
@@ -262,7 +327,23 @@
         <div id="prescriptions-section" class="hidden">
             <div id="prescriptions-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
+        <div id="labs-section" class="hidden">
+            <div class="mb-8 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md">
+                <div class="flex flex-wrap items-center justify-between gap-4"><h2 class="text-2xl font-bold">Laboratoriotulokset</h2></div>
+                <p id="lab-message" class="mt-4" role="status"></p>
+                <div class="flex flex-wrap items-end gap-4 mt-4">
+                    <label class="flex flex-col gap-2 flex-1 text-sm font-medium">Tutkimushaku<input id="lab-search" type="search" placeholder="Tutkimus, koodi tai organisaatio" class="p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md"></label>
+                    <label class="flex flex-col gap-2 text-sm font-medium">Alkupäivä<input id="lab-from" type="date" class="p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md"></label>
+                    <label class="flex flex-col gap-2 text-sm font-medium">Loppupäivä<input id="lab-to" type="date" class="p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md"></label>
+                    <button id="lab-clear" class="py-3 text-sm text-blue-600 dark:text-blue-400 hover:underline">Tyhjennä</button>
+                </div>
+                <p id="lab-count" class="mt-4 text-sm text-gray-500"></p>
+                <p class="mt-2 text-sm text-gray-500">Vihreä merkintä: tuloskohtainen viitearvo. Ontto piste: raja-arvo. Uusimmat tutkimukset ensin.</p>
+            </div>
+            <div id="lab-results"></div>
+        </div>
     </main>
+    <script id="lab-data" type="application/json">null</script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -315,7 +396,8 @@
 
             const setPdfExportMode = (mode) => {
                 pdfExportMode = mode;
-                exportPdfActionLabel.textContent = mode === 'year-zip' ? 'Vie PDF (ZIP)' : 'Vie PDF';
+                exportPdfActionLabel.textContent = mode === 'history' ? 'Vie koko historia' : mode === 'year-zip' ? 'Vie PDF (ZIP)' : 'Vie PDF';
+                document.getElementById('export-pdf-option-history').classList.toggle('font-semibold', mode === 'history');
                 exportPdfOptionCurrent.classList.toggle('font-semibold', mode === 'current');
                 exportPdfOptionYearZip.classList.toggle('font-semibold', mode === 'year-zip');
             };
@@ -336,6 +418,7 @@
             };
 
             const getActiveExportSection = () => {
+                if (!document.getElementById('labs-section').classList.contains('hidden')) return 'labs';
                 return prescriptionsSection.classList.contains('hidden') ? 'visits' : 'prescriptions';
             };
 
@@ -385,6 +468,7 @@
                         const reader = new FileReader();
                         reader.onload = (event) => {
                             targetTextarea.value = event.target.result;
+                            document.getElementById(targetTextarea === jsonInput ? 'visit-filename' : 'prescription-filename').textContent = file.name;
                         };
                         reader.readAsText(file);
                     } else {
@@ -429,6 +513,7 @@
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         jsonInput.value = event.target.result;
+                        document.getElementById('visit-filename').textContent = file.name;
                     };
                     reader.readAsText(file);
                 }
@@ -440,6 +525,7 @@
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         prescriptionInput.value = event.target.result;
+                        document.getElementById('prescription-filename').textContent = file.name;
                     };
                     reader.readAsText(file);
                 }
@@ -480,10 +566,10 @@
                     let linkedPrescriptionsHTML = '';
                     if (visit.linkedPrescriptions && visit.linkedPrescriptions.length > 0) {
                         const prescriptionItems = visit.linkedPrescriptions.map(p => {
-                            const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
+                            const latestVersion = p.versions?.laakemaaraysVersiot?.at(-1);
                             return `<div class="prescription-link-box py-2 px-3 mb-2 last:mb-0 bg-blue-100 dark:bg-blue-800/50 rounded-md cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-700/50 transition-colors" data-prescription-id="${p.setId}">
                                 <span class="font-medium text-blue-700 dark:text-blue-300">${p.valmiste} ${p.vahvuus}</span>
-                                <span class="text-gray-600 dark:text-gray-400 text-sm ml-2">${latestVersion.annostus.annostusohje}</span>
+                                <span class="text-gray-600 dark:text-gray-400 text-sm ml-2">${latestVersion.annostus?.annostusohje || 'Ei ilmoitettu'}</span>
                             </div>`;
                         }).join('');
                         linkedPrescriptionsHTML = `
@@ -520,7 +606,7 @@
                                 <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Potilasmerkinnät</h4>
                                 ${recordsHTML}
                             </div>
-                            ${linkedPrescriptionsHTML}
+                            ${linkedPrescriptionsHTML}${window.KantainLabView.visitMarkup(visit)}
                         </div>`;
                     visitsContainer.appendChild(card);
                 });
@@ -530,9 +616,16 @@
                 prescriptionsContainer.innerHTML = '';
                 const sortedData = data.sort((a,b) => new Date(b.aikaleima) - new Date(a.aikaleima));
                 sortedData.forEach(p => {
-                    const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
-                    const prescriber = latestVersion.maaraaja;
-                    const dispensings = p.versions.toimitukset.map(d => 
+                    if (!p.versions?.laakemaaraysVersiot?.length) {
+                        const card = document.createElement('div');
+                        card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5';
+                        card.textContent = `${p.valmiste || 'Resepti'} ${p.vahvuus || ''} · Tarkemmat tiedot puuttuvat keskeneräisestä hausta.`;
+                        prescriptionsContainer.appendChild(card);
+                        return;
+                    }
+                    const latestVersion = p.versions?.laakemaaraysVersiot?.at(-1);
+                    const prescriber = latestVersion?.maaraaja || {};
+                    const dispensings = (p.versions.toimitukset || []).map(d =>
                         `<li class="text-xs py-1">${new Date(d.aikaleima).toLocaleDateString('fi-FI')}: ${d.kauppanimi}, ${d.maara} (${d.apteekinNimiJaPaikkakunta})</li>`
                     ).join('');
 
@@ -552,7 +645,7 @@
                             <h3 class="font-bold text-lg text-blue-700 dark:text-blue-400">${p.valmiste} ${p.vahvuus}</h3>
                             <p class="text-sm text-gray-600 dark:text-gray-300">${p.laakemuoto}</p>
                             <div class="mt-4 text-sm">
-                                <p><strong class="font-semibold">Annostus:</strong> ${latestVersion.annostus.annostusohje}</p>
+                                <p><strong class="font-semibold">Annostus:</strong> ${latestVersion.annostus?.annostusohje || 'Ei ilmoitettu'}</p>
                                 <p><strong class="font-semibold">Määrä:</strong> ${p.maarattyMaara}</p>
                                 <p><strong class="font-semibold">Määrääjä:</strong> ${prescriber.maaraajanEtunimet} ${prescriber.maaraajanSukunimi}</p>
                                 <p><strong class="font-semibold">Pvm:</strong> ${new Date(prescriber.maarayshetki).toLocaleDateString('fi-FI')}</p>
@@ -606,8 +699,8 @@
                     const visitDate = visit.pvm.substring(0, 10);
                     const visitId = visit.tempSetId || visit.oid;
                     prescriptions.forEach(p => {
-                        const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
-                        if (latestVersion && latestVersion.maaraaja.maarayshetki) {
+                        const latestVersion = p.versions?.laakemaaraysVersiot?.at(-1);
+                        if (latestVersion?.maaraaja?.maarayshetki) {
                             const prescriptionDate = latestVersion.maaraaja.maarayshetki.substring(0, 10);
                             if (visitDate === prescriptionDate) {
                                 visit.linkedPrescriptions.push(p);
@@ -711,6 +804,8 @@
             
             const updateSwitcherUI = (activeButton) => {
                 const isVisits = activeButton.id === 'tab-visits';
+                const isLabs = activeButton.id === 'tab-labs';
+                const isPrescriptions = activeButton.id === 'tab-prescriptions';
                 switcherBg.style.width = `${activeButton.offsetWidth}px`;
                 switcherBg.style.left = `${activeButton.offsetLeft}px`;
                 
@@ -718,26 +813,37 @@
                 tabVisits.classList.toggle('text-gray-600', !isVisits);
                 tabVisits.classList.toggle('dark:text-gray-300', !isVisits);
 
-                tabPrescriptions.classList.toggle('active', !isVisits);
-                tabPrescriptions.classList.toggle('text-gray-600', isVisits);
-                tabPrescriptions.classList.toggle('dark:text-gray-300', isVisits);
+                tabPrescriptions.classList.toggle('active', isPrescriptions);
+                tabPrescriptions.classList.toggle('text-gray-600', !isPrescriptions);
+                tabPrescriptions.classList.toggle('dark:text-gray-300', !isPrescriptions);
+                const tabLabs = document.getElementById('tab-labs');
+                tabLabs.classList.toggle('active', isLabs);
+                tabLabs.classList.toggle('text-gray-600', !isLabs);
+                tabLabs.classList.toggle('dark:text-gray-300', !isLabs);
+                for (const tab of [tabVisits, tabPrescriptions, tabLabs]) tab.setAttribute('aria-selected', String(tab === activeButton));
+                document.getElementById('labs-section').classList.toggle('hidden', !isLabs);
+                document.getElementById('filter-section').classList.toggle('hidden', isLabs);
+                summarySection.classList.toggle('hidden', isLabs);
+                dateRangeStart.parentElement.classList.toggle('hidden', isLabs);
+                exportJsonBtn.classList.remove('hidden');
+                exportPdfDropdown.classList.remove('hidden');
 
                 visitsSection.classList.toggle('hidden', !isVisits);
-                prescriptionsSection.classList.toggle('hidden', isVisits);
+                prescriptionsSection.classList.toggle('hidden', !isPrescriptions);
             };
 
 
             
             processDataBtn.addEventListener('click', () => {
-                const rawData = jsonInput.value;
-                const rawPrescriptionData = prescriptionInput.value;
-
-                if (!rawData.trim()) {
-                    errorMessage.textContent = 'Potilastietojen kenttä on tyhjä.';
-                    errorMessage.classList.remove('hidden');
-                    return;
-                }
                 try {
+                    const combinedMode = document.getElementById('import-one').getAttribute('aria-pressed') === 'true';
+                    const imported = combinedMode ? JSON.parse(document.getElementById('combined-input').value || 'null') : null;
+                    const bundle = imported?.format === 'kantain-linked-v1' ? window.KantainLinked.restore(imported) : imported;
+                    if (combinedMode && (bundle?.format !== 'kantain-kaikki-v1' || !Array.isArray(bundle.visits) || !Array.isArray(bundle.prescriptions) || bundle.labs?.format !== 'kantain-laboratoriot-v1')) throw new Error('Valitse yhdistetyn hakuskriptin tallentama tiedosto');
+                    const rawLabs = combinedMode ? JSON.stringify(bundle.labs) : document.getElementById('lab-input').value.trim();
+                    const rawPrescriptionData = combinedMode ? JSON.stringify(bundle.prescriptions) : prescriptionInput.value;
+                    const rawData = combinedMode ? JSON.stringify(bundle.visits) : jsonInput.value || (rawLabs || rawPrescriptionData ? '[]' : '');
+                    if (!rawData.trim()) throw new Error('Valitse vähintään yksi tiedosto');
                     let fixedRawData = rawData.trim();
                     if (fixedRawData.endsWith(',')) fixedRawData = fixedRawData.slice(0, -1);
                     if (fixedRawData.startsWith('[') && !fixedRawData.endsWith(']')) {
@@ -761,6 +867,12 @@
                     }
 
                     linkData(currentData, prescriptionData);
+                    if (rawLabs) window.KantainLabView.load(JSON.parse(rawLabs), currentData, prescriptionData, bundle);
+                    if (bundle && !bundle.complete) {
+                        const message = document.getElementById('lab-message');
+                        message.textContent = `Yhdistetty haku jäi kesken: ${(bundle.errors || []).join(' ')}. Saatavilla olevat tiedot näytetään.`;
+                        message.className = 'warning';
+                    }
                     filteredData = currentData;
                     filteredPrescriptionData = prescriptionData;
                     populateFilters(currentData);
@@ -770,11 +882,12 @@
                     outputSection.classList.remove('hidden');
                     errorMessage.classList.add('hidden');
                     exportJsonBtn.disabled = false;
+                    document.getElementById('export-json-toggle').disabled = false;
                     exportPdfActionBtn.disabled = false;
                     exportPdfToggleBtn.disabled = false;
                     
                     
-                    setTimeout(() => updateSwitcherUI(tabVisits), 50);
+                    setTimeout(() => updateSwitcherUI(combinedMode || currentData.length ? tabVisits : rawLabs ? document.getElementById('tab-labs') : tabPrescriptions), 50);
 
                 } catch (error) {
                     console.error("Virhe JSON-tietojen jäsentämisessä:", error);
@@ -784,17 +897,26 @@
             });
 
             resetDataBtn.addEventListener('click', () => {
+                window.KantainLabView.reset();
+                document.getElementById('combined-input').value = '';
+                document.getElementById('combined-filename').textContent = '';
+                document.getElementById('lab-data').textContent = 'null';
                 outputSection.classList.add('hidden');
                 inputSection.classList.remove('hidden');
                 visitsContainer.innerHTML = '';
                 prescriptionsContainer.innerHTML = '';
                 jsonInput.value = '';
                 prescriptionInput.value = '';
+                document.getElementById('visit-filename').textContent = '';
+                document.getElementById('prescription-filename').textContent = '';
                 currentData = [];
                 prescriptionData = [];
                 filteredData = [];
                 filteredPrescriptionData = [];
                 exportJsonBtn.disabled = true;
+                document.getElementById('export-json-toggle').disabled = true;
+                document.getElementById('export-json-menu').classList.add('hidden');
+                document.getElementById('export-json-toggle').setAttribute('aria-expanded', 'false');
                 exportPdfActionBtn.disabled = true;
                 exportPdfToggleBtn.disabled = true;
                 closePdfMenu();
@@ -810,7 +932,27 @@
 
             tabVisits.addEventListener('click', () => updateSwitcherUI(tabVisits));
             tabPrescriptions.addEventListener('click', () => updateSwitcherUI(tabPrescriptions));
+            document.getElementById('tab-labs').addEventListener('click', () => updateSwitcherUI(document.getElementById('tab-labs')));
+            window.addEventListener('kantain:open-visit', event => {
+                const id = event.detail?.id;
+                const visit = currentData.find((item, index) => String(item.tempSetId || item.oid || index) === id);
+                if (!visit) return;
+                keywordSearch.value = '';
+                dateRangeStart.value = '';
+                dateRangeEnd.value = '';
+                for (const container of [diagnoosiFilterContainer, sijaintiFilterContainer, henkiloFilterContainer]) container.querySelectorAll('input[type="checkbox"]').forEach(box => { box.checked = false; });
+                applyFilters();
+                updateSwitcherUI(tabVisits);
+                const card = document.getElementById(`visit-${id}`);
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.classList.add('ring-4', 'ring-green-500', 'ring-opacity-75');
+                    setTimeout(() => card.classList.remove('ring-4', 'ring-green-500', 'ring-opacity-75'), 2000);
+                }
+            });
             visitsContainer.addEventListener('click', (e) => {
+                const labLink = e.target.closest('.lab-result-link');
+                if (labLink) { updateSwitcherUI(document.getElementById('tab-labs')); window.KantainLabView.openResult(labLink.dataset.resultId); return; }
                 const linkBox = e.target.closest('.prescription-link-box');
                 if (linkBox) {
                     e.preventDefault();
@@ -890,42 +1032,48 @@
                 applyFilters();
             });
 
-            exportJsonBtn.addEventListener('click', async () => {
-                if (filteredData.length === 0 && filteredPrescriptionData.length === 0) return;
-                progressText.textContent = 'Luodaan JSON-tiedostoa...';
-                loadingOverlay.classList.remove('hidden');
-                loadingOverlay.classList.add('flex');
-                await new Promise(resolve => setTimeout(resolve, 50));
-
-                const exportObject = {
-                    potilastiedot: filteredData.map(visit => ({
-                        oid: visit.oid,
-                        paivamaara: visit.pvmStr,
-                        palveluyksikko: visit.organisaatiotiedot.find(org => org.organisaationTyyppi === 'TYYPPI_PALVELUYKSIKKO')?.organisaationNimi || 'N/A',
-                        diagnoosit: visit.diagnoosienTiedot.map(diag => ({ koodi: diag.koodi, selite: diag.fi })),
-                        merkinnat: visit.details?.potilaskertomukset.map(merkinta => ({
-                            tekija: merkinta.merkinnanTekija.tekija || merkinta.merkinnanTekija.nimi,
-                            organisaatio: merkinta.merkinnanTekija.organisaatioNimi || merkinta.merkinnanTekija.palveluyksikko,
-                            ajankohta: merkinta.merkinnanTekija.naytettavaAika || merkinta.merkinnanTekija.tapahtumaAika,
-                            teksti: merkinta.nayttomuoto?.replace(/Kuvaus;\s*/g, '').replace(/<[^>]*>/g, ' ').replace(/\s\s+/g, ' ').trim() || ''
-                        })) || [],
-                    })),
-                    reseptit: filteredPrescriptionData
-                };
-                
-                const dataStr = JSON.stringify(exportObject, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'potilastiedot_vienti.json';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                loadingOverlay.classList.add('hidden');
-                loadingOverlay.classList.remove('flex');
+            const exportBundle = () => {
+                const snapshot = window.KantainLabView.snapshot();
+                return { ...(snapshot.importStatus || {}), format: 'kantain-kaikki-v1', complete: snapshot.importStatus?.complete ?? snapshot.labs?.complete ?? true, errors: snapshot.importStatus?.errors || snapshot.labs?.errors || [], visits: currentData, prescriptions: prescriptionData, labs: snapshot.labs || { format: 'kantain-laboratoriot-v1', complete: true, events: [] } };
+            };
+            let jsonExportMode = 'original';
+            let jsonExportBusy = false;
+            const jsonMenu = document.getElementById('export-json-menu');
+            const jsonToggle = document.getElementById('export-json-toggle');
+            const closeJsonMenu = () => { jsonMenu.classList.add('hidden'); jsonToggle.setAttribute('aria-expanded', 'false'); };
+            const runJsonExport = async () => {
+                if (jsonExportBusy || exportJsonBtn.disabled) return;
+                jsonExportBusy = true;
+                exportJsonBtn.disabled = true;
+                jsonToggle.disabled = true;
+                try {
+                    progressText.textContent = 'Järjestetään ja linkitetään tietoja...';
+                    loadingOverlay.classList.remove('hidden');
+                    loadingOverlay.classList.add('flex');
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                    const bundle = exportBundle();
+                    const data = jsonExportMode === 'linked' ? await window.KantainLinked.build(bundle) : bundle;
+                    downloadBlob(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }), jsonExportMode === 'linked' ? 'kantain_linkitetty.json' : 'kantain_vienti.json');
+                } catch (error) {
+                    alert(`JSON-vienti epäonnistui: ${error.message}`);
+                } finally {
+                    loadingOverlay.classList.add('hidden');
+                    loadingOverlay.classList.remove('flex');
+                    exportJsonBtn.disabled = false;
+                    jsonToggle.disabled = false;
+                    jsonExportBusy = false;
+                }
+            };
+            exportJsonBtn.addEventListener('click', runJsonExport);
+            jsonToggle.addEventListener('click', () => { const open = jsonMenu.classList.contains('hidden'); jsonMenu.classList.toggle('hidden', !open); jsonToggle.setAttribute('aria-expanded', String(open)); });
+            for (const mode of ['original', 'linked']) document.getElementById('export-json-' + mode).addEventListener('click', async () => {
+                jsonExportMode = mode;
+                document.getElementById('export-json-label').textContent = mode === 'linked' ? 'Vie linkitetty JSON' : 'Vie JSON';
+                closeJsonMenu();
+                await runJsonExport();
             });
+            document.addEventListener('click', event => { if (!document.getElementById('export-json-dropdown').contains(event.target)) closeJsonMenu(); });
+            document.addEventListener('keydown', event => { if (event.key === 'Escape') closeJsonMenu(); });
 
             document.addEventListener('click', (e) => {
                 if (!exportPdfDropdown.contains(e.target)) closePdfMenu();
@@ -954,11 +1102,20 @@
                 await runPdfExport();
             });
 
+            document.getElementById('export-pdf-option-history').addEventListener('click', async () => { setPdfExportMode('history'); closePdfMenu(); await runPdfExport(); });
             const runPdfExport = async () => {
                 loadingOverlay.classList.remove('hidden');
                 loadingOverlay.classList.add('flex');
 
                 try {
+                    if (pdfExportMode === 'history') { await window.KantainExport.pdf(exportBundle(), { history: true, filename: 'kantain_koko_historia.pdf' }); return; }
+                    if (getActiveExportSection() === 'labs') {
+                        const bundle = exportBundle();
+                        const rows = window.KantainLabView.getRows(true);
+                        if (pdfExportMode === 'year-zip') await window.KantainExport.yearZip(bundle, rows);
+                        else await window.KantainExport.pdf(bundle, { rows, filename: 'laboratoriotulokset.pdf' });
+                        return;
+                    }
                     if (pdfExportMode === 'year-zip') {
                         await exportPdfPerYearZip();
                         return;
@@ -1126,6 +1283,19 @@
                      }
                      y += lineHeight;
 
+                     const labRows = window.KantainLabView.visitResults(visit);
+                     if (labRows.length) {
+                         checkPageBreak(lineHeight * 2);
+                         pdf.setFontSize(subHeadingFontSize).setFont(undefined, 'bold').setTextColor(0);
+                         pdf.text('Käyntiin liittyvät laboratoriotulokset', margin, y);
+                         y += lineHeight;
+                         pdf.setFontSize(normalFontSize).setFont(undefined, 'normal');
+                         for (const row of labRows) {
+                             const value = `${row.label}: ${row.raw}${row.unitInference ? ' ' + row.unit + ' (yksikkö päätelty)' : ''} | ${row.time || ''} | Viitearvo: ${row.reference || '-'} ${row.assessment || ''}`;
+                             for (const line of pdf.splitTextToSize(value, contentWidth)) { checkPageBreak(lineHeight); pdf.text(line, margin, y); y += lineHeight; }
+                         }
+                         y += lineHeight;
+                     }
                      if (visit.linkedPrescriptions && visit.linkedPrescriptions.length > 0) {
                          checkPageBreak(lineHeight * (visit.linkedPrescriptions.length + 1));
                          pdf.setFontSize(subHeadingFontSize).setFont(undefined, 'bold').setTextColor(0);
@@ -1133,8 +1303,8 @@
                          y += lineHeight;
                          pdf.setFontSize(normalFontSize).setFont(undefined, 'normal');
                          for (const p of visit.linkedPrescriptions) {
-                              const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
-                              const pText = `- ${p.valmiste} ${p.vahvuus}: ${latestVersion.annostus.annostusohje}`;
+                              const latestVersion = p.versions?.laakemaaraysVersiot?.at(-1);
+                              const pText = `- ${p.valmiste} ${p.vahvuus}: ${latestVersion.annostus?.annostusohje || 'Ei ilmoitettu'}`;
                               const splitText = pdf.splitTextToSize(pText, contentWidth);
                               checkPageBreak(splitText.length * lineHeight);
                               pdf.text(splitText, margin, y);
@@ -1243,6 +1413,7 @@
                 const totalPrescriptions = sortedData.length;
 
                 for (const [index, p] of sortedData.entries()) {
+                    if (!p.versions?.laakemaaraysVersiot?.length) { checkPageBreak(lineHeight * 2); pdf.text('Reseptin tarkemmat tiedot puuttuvat keskeneräisestä hausta.', margin, y); y += lineHeight * 2; continue; }
                     progressText.textContent = `${progressPrefix} (${index + 1} / ${totalPrescriptions})`;
                     await new Promise(resolve => setTimeout(resolve, 10));
 
@@ -1252,7 +1423,7 @@
                         y += lineHeight * 2;
                     }
 
-                    const latestVersion = p.versions.laakemaaraysVersiot[p.versions.laakemaaraysVersiot.length - 1];
+                    const latestVersion = p.versions?.laakemaaraysVersiot?.at(-1);
                     const prescriber = latestVersion.maaraaja;
 
                     pdf.setFontSize(headingFontSize).setFont(undefined, 'bold');
@@ -1304,5 +1475,824 @@
             };
         });
     </script>
+<script id="lab-core">
+(function (root) {
+    const clean = value => String(value ?? '').normalize('NFKC').replace(/\s+/g, ' ').trim();
+    const nameKey = value => clean(value).toLocaleLowerCase('fi').replace(/\s*-\s*/g, '-');
+    const aliases = [
+        ['B-Hemoglobiini', 'B-Hb'], ['B-Erytrosyytit', 'B-Eryt'], ['B-Erytrosyytit, tilavuusosuus', 'B-HKR'],
+        ['B-Leukosyytit', 'B-Leuk', 'fB-Leukosyytit'], ['B-Lymfosyytit', 'B-Ly', 'B-Lymf'], ['B-Trombosyytit', 'B-Trom', 'B-Tromb'],
+        ['L-Basofiiliset leukosyytit', 'L-Baso(A)', 'Basof'], ['L-Eosinofiilit', 'L-Eos(A)', 'Eosin'],
+        ['L-Lymfosyytit', 'L-Lymf(A)', 'Lymfos'], ['L-Monosyytit', 'L-Mono(A)', 'Monos'], ['L-Neutrofiilit', 'L-Neut(A)', 'Neutros'],
+        ['P-Tyreotropiini', 'P-TSH', 'S-TSH'], ['P-Tyroksiini, vapaa', 'P-T4-V', 'S-T4-V'], ['P-Kreatiniini', 'P-Krea'],
+        ['P-C-reaktiivinen proteiini', 'P-CRP', 'PIKA-CRP'], ['P-Kolesteroli', 'P-Kol', 'fP-Kol', 'fP-Kolesteroli'],
+        ['P-Kol-HDL', 'fP-Kol-HDL'], ['P-Kol-LDL', 'fP-Kol-LDL'], ['P-Triglyseridit', 'P-Trigly', 'fP-Trigly', 'fP-Triglyseridit'],
+        ['S-D-vitamiini-25-OH', 'S-D-25', 'P-D-25'], ['Pt-GFRe', 'Pt-GFReEPI'],
+        ['U-Bakteeri, viljely', 'U-BaktVi'], ['U-Bakteerit', 'U-Bakt', 'U-Bact'], ['U-Levyep', 'U-LevyEp'],
+        ['U-PienEp', 'U-Pien.Ep'], ['U-Lieriöt', 'U-Lier'], ['U-Kanna-O', 'U-Canna-O']
+    ];
+    function aliasIndex(options) {
+        const parent = new Map();
+        const names = new Map();
+        const find = key => { if (!parent.has(key)) parent.set(key, key); if (parent.get(key) !== key) parent.set(key, find(parent.get(key))); return parent.get(key); };
+        for (const group of [...options.map(option => option.label.split(' / ')), ...aliases]) {
+            const keys = group.map(nameKey);
+            const root = find(keys[0]);
+            for (const [index, key] of keys.entries()) { parent.set(find(key), root); if (!names.has(key)) names.set(key, clean(group[index])); }
+        }
+        const all = [...parent.keys()];
+        return name => { const key = find(nameKey(name)); return { key, label: names.get(key) || clean(name), aliases: all.filter(alias => find(alias) === key) }; };
+    }
+    function date(value) {
+        const text = clean(value);
+        const fi = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?: (\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+        const iso = fi ? `${fi[3]}-${fi[2].padStart(2, '0')}-${fi[1].padStart(2, '0')}${fi[4] ? `T${fi[4].padStart(2, '0')}:${fi[5]}:${fi[6] || '00'}` : ''}` : text;
+        if (!/^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(iso) || !Number.isFinite(new Date(iso).getTime())) return null;
+        return iso;
+    }
+    function unitKey(value) {
+        return clean(value).replace(/[µμ]/g, 'u').replace('1.73_m2', '1.73 m2').replace(/e(\d+)\/l/gi, 'E$1/l').replace(/\/L\b/g, '/l');
+    }
+    function inferUnits(rows) {
+        const groups = new Map();
+        for (const row of rows) {
+            row.originalUnit ??= row.unit;
+            row.unit = unitKey(row.unit);
+            if (!groups.has(row.identity)) groups.set(row.identity, []);
+            groups.get(row.identity).push(row);
+        }
+        const close = (a, b) => a === b || (a !== 0 && b !== 0 && Math.sign(a) === Math.sign(b) && Math.max(Math.abs(a), Math.abs(b)) / Math.min(Math.abs(a), Math.abs(b)) <= 3);
+        for (const group of groups.values()) {
+            const known = group.filter(row => row.unit && row.value !== null);
+            for (const row of group.filter(row => !row.unit && row.value !== null)) {
+                const candidates = new Map();
+                for (const sample of known) {
+                    if (row.specimen && sample.specimen && nameKey(row.specimen) !== nameKey(sample.specimen)) continue;
+                    const bounds = ['low', 'high'].filter(key => row[key] !== null && sample[key] !== null);
+                    const referenceMatches = bounds.length > 0 && bounds.every(key => close(row[key], sample[key]));
+                    if (bounds.length && !referenceMatches) continue;
+                    if (!close(row.value, sample.value) && !(row.value === 0 && referenceMatches)) continue;
+                    if (!candidates.has(sample.unit)) candidates.set(sample.unit, []);
+                    candidates.get(sample.unit).push(sample.id);
+                }
+                if (candidates.size === 1) {
+                    const [unit, evidence] = [...candidates][0];
+                    row.unit = unit;
+                    row.unitInference = { method: 'same-study-value-and-reference', evidence };
+                }
+            }
+        }
+        for (const row of rows) row.group = JSON.stringify([row.identity, row.unit]);
+        return rows;
+    }
+    function numeric(value) {
+        const raw = clean(value);
+        const text = raw.replace(/\\([<>*])/g, '$1').replace(/\s*\*$/, '').trim();
+        const match = text.match(/^([<>≤≥]=?)?\s*([+-]?(?:\d+(?:[.,]\d+)?|[.,]\d+)(?:[eE][+-]?\d+)?)(?:\s+([^\s]+(?: m2)?))?$/);
+        if (!match) return { value: null, comparator: '', unit: '', raw };
+        const number = Number(match[2].replace(',', '.'));
+        const unit = unitKey(match[3]);
+        return { value: Number.isFinite(number) ? number : null, comparator: match[1] || '', unit, raw };
+    }
+    function reference(value) {
+        const text = clean(value).replace(/,/g, '.').replace(/\\([<>])/g, '$1').replace(/\s+[^\d\s<>≤≥+−–-][^\s]*(?: m2)?$/, '');
+        const range = text.match(/^([+-]?\d+(?:\.\d+)?)\s*[-–]\s*([+-]?\d+(?:\.\d+)?)$/);
+        if (range && Number(range[1]) <= Number(range[2])) return { low: Number(range[1]), high: Number(range[2]) };
+        const bound = text.match(/^([<>≤≥]=?)\s*([+-]?\d+(?:\.\d+)?)$/);
+        if (bound) return bound[1].startsWith('<') || bound[1] === '≤' ? { low: null, high: Number(bound[2]) } : { low: Number(bound[2]), high: null };
+        return { low: null, high: null };
+    }
+    function normalize(data) {
+        if (data?.format !== 'kantain-laboratoriot-v1' || !Array.isArray(data.events)) throw new Error('Valitse laboratoriotulosten latausskriptin JSON-tiedosto.');
+        const options = data.filterOptions || [];
+        const canonical = aliasIndex(options);
+        const rows = [];
+        const seen = new Set();
+        for (const event of data.events) {
+            if (!event.details) continue;
+            for (const item of event.details.tehdytTutkimukset || []) {
+                const full = event.studies?.[item.index];
+                const summary = full?.tutkimusYhteenveto;
+                const more = full?.tutkimuksenTarkemmatTiedot;
+                const name = clean(full?.nimi || item.tutkimuksenNimi);
+                const code = clean(summary?.koodiJaNimi).match(/^(\S+)\s/)?.[1] || '';
+                const identity = canonical(name).key;
+                const label = canonical(name).label;
+                const values = summary?.tulos || item.tutkimustulos?.tulos || [];
+                const refs = summary?.viitevalit || item.tutkimustulos?.viitevalit || [];
+                const specimen = clean(more?.naytelaatu);
+                const time = date(more?.tutkimusAjankohta || full?.tutkimusajankohta || event.ajankohdanAvain);
+                const source = (more?.organisaatioTiedot || event.organisaatiotiedot || []).join(' · ');
+                for (const [position, raw] of (values.length ? values : ['']).entries()) {
+                    const id = `${event.tunniste}/${event.ajankohdanAvain}/${item.index}/${position}`;
+                    if (seen.has(id)) continue;
+                    seen.add(id);
+                    const parsed = numeric(raw);
+                    const refText = refs.length === values.length ? refs[position] : refs.length === 1 ? refs[0] : refs.join('; ');
+                    const referenceUnit = clean(refText).match(/\d\s+([^\d\s<>≤≥+−–-][^\s]*(?: m2)?)$/)?.[1];
+                    const originalUnit = parsed.unit;
+                    const unitInference = !parsed.unit && parsed.value !== null && referenceUnit ? { method: 'reference-unit', evidence: [id] } : null;
+                    if (unitInference) parsed.unit = unitKey(referenceUnit);
+                    rows.push({ originalUnit, unitInference, id, name, label, code, identity, aliases: canonical(name).aliases, specimen, time, source, ...parsed, reference: clean(refText), ...reference(refText), assessment: summary?.nayttonimi || item.tutkimustulos?.poikkeavuusarvionTiedot?.nayttonimi || '', status: clean(more?.vastauksenTila), details: full || item, visitId: event.details.palvelutapahtumanId || '', visitReference: event.linkedVisit || null, group: JSON.stringify([identity, parsed.unit]), incomplete: !full });
+                }
+            }
+        }
+        return inferUnits(rows).sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')) || a.id.localeCompare(b.id));
+    }
+    function matchVisit(row, visits) {
+        const stable = row.visitReference?.tunniste;
+        if (stable) {
+            const found = visits.filter(visit => visit.tunniste === stable || visit.oid === stable);
+            if (found.length === 1) return found[0];
+        }
+        const matches = visits.filter(visit => row.visitId && [visit.tempSetId, visit.oid, visit.tunniste].includes(row.visitId));
+        return matches.length === 1 ? matches[0] : null;
+    }
+    const api = { clean, nameKey, date, numeric, reference, normalize, matchVisit, aliasIndex, unitKey, inferUnits };
+    if (typeof module !== 'undefined' && module.exports) module.exports = api;
+    else root.KantainLabs = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+<script id="lab-view">
+document.addEventListener('DOMContentLoaded', () => {
+    const $ = id => document.getElementById('lab-' + id);
+    let data = null;
+    let rows = [];
+    let visits = [];
+    let prescriptions = [];
+    let importStatus = null;
+    const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    function load(value, visitData = [], prescriptionData = [], status = null) {
+        const nextRows = KantainLabs.normalize(value);
+        data = value;
+        importStatus = status;
+        rows = nextRows;
+        visits = visitData;
+        prescriptions = prescriptionData;
+        $('message').textContent = value.complete ? `${rows.length} tulosta · ${value.events.length} tuloskokonaisuutta · ${value.start} – ${value.end}` : `Keskeneräinen haku: ${value.errors?.join(' ') || 'Kaikkia tietoja ei ole ladattu.'} ${rows.length} tulosta käytettävissä.`;
+        $('message').className = value.complete ? '' : 'warning';
+        $('from').value = '';
+        $('to').value = '';
+        $('search').value = '';
+        render();
+    }
+    function render() {
+        const search = $('search').value.toLocaleLowerCase('fi');
+        const from = $('from').value;
+        const to = $('to').value;
+        if (from && to && from > to) { $('results').textContent = 'Alkupäivä ei voi olla loppupäivän jälkeen.'; return; }
+        const filtered = rows.filter(row => `${row.label} ${row.name} ${row.code} ${row.specimen} ${row.source}`.toLocaleLowerCase('fi').includes(search) && (!from || row.time?.slice(0, 10) >= from) && (!to || row.time?.slice(0, 10) <= to));
+        const groups = new Map();
+        for (const row of filtered) { if (!groups.has(row.identity)) groups.set(row.identity, []); groups.get(row.identity).push(row); }
+        $('count').textContent = `${filtered.length} tulosta · ${groups.size} tutkimussarjaa`;
+        $('results').replaceChildren();
+        if (!filtered.length) { $('results').textContent = data ? 'Ei tuloksia valitulla rajauksella.' : 'Valitse laboratoriotulosten JSON-tiedosto.'; return; }
+        for (const group of [...groups.values()].sort((a, b) => String(b.at(-1).time).localeCompare(String(a.at(-1).time)) || a[0].label.localeCompare(b[0].label, 'fi'))) {
+            const first = group.at(-1);
+            const section = document.createElement('section');
+            section.className = 'card bg-white dark:bg-gray-800';
+            section.dataset.study = first.identity;
+            section.dataset.latest = first.time || '';
+            section.innerHTML = `<h2>${esc(first.label)}</h2><p class="muted">${esc(`${group.length} tulosta · Viimeisin ${displayTime(first.time)}`)}</p><div class="unit-selector"></div><div class="chart"></div><div class="point-info" aria-live="polite"></div>${knowledge(first)}<details><summary>Kaikki tulokset ja lisätiedot (${group.length})</summary><div class="table-wrap"><table><thead><tr><th>Näyteaika</th><th>Tulos</th><th>Viitearvo</th><th>Arvio / tila</th><th>Organisaatio ja käynti</th><th>Lisätiedot</th></tr></thead><tbody>${[...group].reverse().map(row => `<tr><td>${esc(displayTime(row.time))}</td><td>${esc(resultText(row) || 'Ei numeerista tulosta')}</td><td>${esc(row.reference)}</td><td>${esc([row.assessment, row.status, row.incomplete ? 'Tarkemmat tiedot puuttuvat' : ''].filter(Boolean).join(' · '))}</td><td>${esc(row.source)}${visitLink(row)}</td><td><details><summary>Avaa</summary>${details(row)}</details></td></tr>`).join('')}</tbody></table></div></details>`;
+            $('results').append(section);
+            const units = [...new Set([...group].reverse().filter(row => row.value !== null).map(row => row.unit))];
+            const redraw = unit => { section.querySelector('.chart').replaceChildren(); draw(section, group.filter(row => row.unit === unit)); };
+            if (units.length > 1) {
+                const label = document.createElement('label');
+                label.textContent = 'Kaavion yksikkö ';
+                const select = document.createElement('select');
+                select.setAttribute('aria-label', `${first.label}: kaavion yksikkö`);
+                select.className = 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md p-2';
+                for (const unit of units) { const option = document.createElement('option'); option.value = unit; option.textContent = unit || 'Yksikötön'; select.append(option); }
+                select.addEventListener('change', () => redraw(select.value));
+                label.append(select);
+                section.querySelector('.unit-selector').append(label);
+            } else section.querySelector('.unit-selector').textContent = units[0] || '';
+            redraw(units[0] || '');
+        }
+    }
+    function resultText(row) {
+        return row.raw + (row.unitInference ? ` ${row.unit} (yksikkö päätelty)` : '');
+    }
+    function displayTime(value) {
+        if (!value) return 'Ei näyteaikaa';
+        return new Date(value).toLocaleString('fi-FI', { year: 'numeric', month: 'numeric', day: 'numeric', ...(value.includes('T') ? { hour: '2-digit', minute: '2-digit' } : {}) });
+    }
+    function plain(value) {
+        const doc = new DOMParser().parseFromString(String(value || ''), 'text/html');
+        return doc.body.textContent || '';
+    }
+    function details(row) {
+        const extra = row.details.tutkimuksenTarkemmatTiedot || {};
+        const labels = { valmistumisaika: 'Valmistunut', kirjauksenAjankohta: 'Kirjattu', tutkimuksenTekija: 'Tekijä', tutkimustapa: 'Tutkimustapa', naytelaatu: 'Näytelaatu', vastauksenTila: 'Vastauksen tila', tiedonlahde: 'Tiedon lähde' };
+        let html = `<dl><dt>Tutkimus</dt><dd>${esc(row.name)}</dd><dt>Tutkimuskoodi</dt><dd>${esc(row.code || 'Ei ilmoitettu')}</dd>`;
+        for (const [key, label] of Object.entries(labels)) if (typeof extra[key] === 'string' && extra[key]) html += `<dt>${label}</dt><dd>${esc(extra[key])}</dd>`;
+        html += '</dl>';
+        const additional = row.details.tutkimusYhteenveto?.tutkimuksenLisatiedot;
+        if (typeof additional === 'string') html += `<p>${esc(plain(additional))}</p>`;
+        for (const statement of row.details.lausunnot || []) html += `<p class="mt-3 font-semibold">Lausunto ${esc(statement.lausuntoAjankohta || '')}</p><p class="lab-statement">${esc(plain(statement.lausunto || ''))}</p>`;
+        return html;
+    }
+    function visitLink(row) {
+        const visit = KantainLabs.matchVisit(row, visits);
+        if (visit) return `<button type="button" class="lab-visit-link block mt-2 text-green-700 dark:text-green-400 hover:underline" data-visit-id="${esc(visit.tempSetId || visit.oid || visits.indexOf(visit))}">Näytä potilaskäynti ${esc(visit.pvmStr || displayTime(KantainLabs.date(visit.pvm || visit.alkuPvm)))}</button>`;
+        return row.visitId ? '<p class="mt-2 text-sm text-gray-500">Liittyvä potilaskäynti ei ole ladattuna.</p>' : '';
+    }
+    function knowledge(row) {
+        const entry = window.KantainLabKnowledge?.find(row);
+        if (!entry) return '';
+        const id = `lab-knowledge-${encodeURIComponent(row.identity)}`;
+        return `<div class="lab-knowledge mt-4 mb-4"><p class="text-sm font-semibold mb-2">${entry.general ? 'Yleistä laboratoriotutkimuksista' : 'Mitä tutkimus kertoo?'}</p><div id="${id}" class="lab-knowledge-text"><p>${esc(entry.text)}</p></div><div class="flex flex-wrap gap-4 mt-2"><button type="button" class="lab-knowledge-toggle text-sm text-blue-600 dark:text-blue-400 hover:underline" aria-expanded="true" aria-controls="${id}">Piilota teksti</button><a href="${esc(entry.url)}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">${entry.general ? 'Terveyskirjaston yleisohje' : 'Lue Terveyskirjastosta'} ↗</a></div></div>`;
+    }
+    function draw(section, group) {
+        const points = group.filter(row => row.value !== null && row.time);
+        const host = section.querySelector('.chart');
+        const info = section.querySelector('.point-info');
+        if (!points.length) { host.textContent = 'Tekstivastaukset ja lausunnot löytyvät lisätiedoista.'; info.hidden = true; return; }
+        info.hidden = false;
+        const tooltip = document.createElement('div');
+        tooltip.className = 'lab-tooltip';
+        tooltip.setAttribute('role', 'tooltip');
+        tooltip.hidden = true;
+        host.append(tooltip);
+        const times = points.map(row => new Date(row.time).getTime());
+        const minTime = Math.min(...times);
+        const maxTime = Math.max(...times);
+        const values = points.flatMap(row => [row.value, row.low, row.high].filter(value => value !== null));
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const margin = Math.max((max - min) * 0.12, Math.abs(max) * 0.02, 0.001);
+        const low = min >= 0 ? Math.max(0, min - margin) : min - margin;
+        const high = max + margin;
+        const x = time => maxTime === minTime ? 480 : 72 + (time - minTime) / (maxTime - minTime) * 816;
+        const y = value => 225 - (value - low) / (high - low) * 200;
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', '0 0 960 270');
+        svg.setAttribute('role', 'group');
+        svg.setAttribute('aria-label', `${group[0].label}, ${points.length} numeerista tulosta`);
+        let markup = '';
+        for (let i = 0; i <= 4; i++) {
+            const value = low + (high - low) * i / 4;
+            markup += `<line x1="72" x2="888" y1="${y(value)}" y2="${y(value)}" class="grid-line"/><text x="62" y="${y(value) + 4}" text-anchor="end">${esc(Number(value.toPrecision(4)).toLocaleString('fi-FI'))}</text>`;
+        }
+        let previous = null;
+        for (const [index, row] of points.entries()) {
+            const px = x(times[index]);
+            const py = y(row.value);
+            if (row.low !== null && row.high !== null) markup += `<line x1="${px}" x2="${px}" y1="${y(row.low)}" y2="${y(row.high)}" stroke="#16a34a" stroke-width="12" opacity="0.2"/>`;
+            for (const bound of [row.low, row.high].filter(value => value !== null)) markup += `<line x1="${px - 8}" x2="${px + 8}" y1="${y(bound)}" y2="${y(bound)}" stroke="#16a34a" stroke-width="2"/>`;
+            if (!row.comparator && previous) markup += `<line x1="${previous.x}" y1="${previous.y}" x2="${px}" y2="${py}" stroke="#2563eb" stroke-width="2"/>`;
+            previous = row.comparator ? null : { x: px, y: py };
+        }
+        markup += `<text x="72" y="255">${esc(new Date(minTime).toLocaleDateString('fi-FI'))}</text><text x="888" y="255" text-anchor="end">${esc(new Date(maxTime).toLocaleDateString('fi-FI'))}</text>`;
+        svg.innerHTML = markup;
+        for (const [index, row] of points.entries()) {
+            const point = document.createElementNS(ns, 'circle');
+            point.dataset.resultId = row.id;
+            point.setAttribute('cx', x(times[index]));
+            point.setAttribute('cy', y(row.value));
+            point.setAttribute('r', 5);
+            point.setAttribute('fill', row.comparator ? '#fff' : '#2563eb');
+            point.setAttribute('stroke', '#2563eb');
+            point.setAttribute('stroke-width', 2);
+            point.setAttribute('tabindex', '0');
+            point.setAttribute('role', 'button');
+            const text = `${displayTime(row.time)} · ${resultText(row)} · ${row.name}${row.specimen ? ' · ' + row.specimen : ''} · Viitearvo: ${row.reference || 'ei ilmoitettu'} · ${row.assessment} · ${row.source}${row.comparator ? ' · Raja-arvo, ei tarkka mittaus' : ''}`;
+            point.setAttribute('aria-label', text);
+            const show = () => {
+                info.innerHTML = visitLink(row);
+                tooltip.textContent = `${resultText(row)} · ${displayTime(row.time)}${row.reference ? ' · Viitearvo ' + row.reference : ''}`;
+                tooltip.hidden = false;
+                tooltip.style.left = `${Math.max(15, Math.min(85, x(times[index]) / 960 * 100))}%`;
+                tooltip.style.top = `${y(row.value) / 270 * 100}%`;
+            };
+            for (const event of ['pointerleave', 'blur']) point.addEventListener(event, () => { tooltip.hidden = true; });
+            point.addEventListener('keydown', event => { if (event.key === 'Escape') tooltip.hidden = true; });
+            for (const event of ['pointerenter', 'focus', 'click']) point.addEventListener(event, show);
+            point.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); } });
+            svg.append(point);
+        }
+        host.append(svg);
+    }
+    const one = document.getElementById('import-one');
+    const three = document.getElementById('import-three');
+    function mode(combined) {
+        one.setAttribute('aria-pressed', String(combined));
+        three.setAttribute('aria-pressed', String(!combined));
+        document.getElementById('combined-import').hidden = !combined;
+        document.getElementById('separate-import').hidden = combined;
+    }
+    one.addEventListener('click', () => mode(true));
+    three.addEventListener('click', () => mode(false));
+    const combinedZone = document.getElementById('combined-drop-zone');
+    const combinedFile = document.getElementById('combined-file');
+    async function importCombined(file) {
+        if (!file) return;
+        try {
+            document.getElementById('combined-input').value = await file.text();
+            document.getElementById('combined-filename').textContent = file.name;
+        } catch (error) { document.getElementById('combined-filename').textContent = error.message; }
+    }
+    combinedZone.addEventListener('click', event => { if (event.target !== combinedFile) combinedFile.click(); });
+    combinedZone.addEventListener('keydown', event => { if (event.target === combinedZone && ['Enter', ' '].includes(event.key)) { event.preventDefault(); combinedFile.click(); } });
+    combinedZone.addEventListener('dragover', event => { event.preventDefault(); combinedZone.classList.add('drop-zone-active'); });
+    combinedZone.addEventListener('dragleave', () => combinedZone.classList.remove('drop-zone-active'));
+    combinedZone.addEventListener('drop', event => { event.preventDefault(); combinedZone.classList.remove('drop-zone-active'); importCombined(event.dataTransfer.files[0]); });
+    combinedFile.addEventListener('change', async event => { await importCombined(event.target.files[0]); event.target.value = ''; });
+    const zone = $('drop-zone');
+    zone.addEventListener('click', event => { if (event.target !== $('file')) $('file').click(); });
+    zone.addEventListener('keydown', event => { if (event.target === zone && ['Enter', ' '].includes(event.key)) { event.preventDefault(); $('file').click(); } });
+    zone.addEventListener('dragover', event => { event.preventDefault(); zone.classList.add('drop-zone-active'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drop-zone-active'));
+    zone.addEventListener('drop', async event => {
+        event.preventDefault();
+        zone.classList.remove('drop-zone-active');
+        try { if (event.dataTransfer.files[0]) { $('input').value = await event.dataTransfer.files[0].text(); $('filename').textContent = event.dataTransfer.files[0].name; } }
+        catch (error) { $('message').textContent = error.message; }
+    });
+    $('file').addEventListener('change', async event => {
+        try { if (event.target.files[0]) { $('input').value = await event.target.files[0].text(); $('filename').textContent = event.target.files[0].name; } }
+        catch (error) { $('message').textContent = error.message; $('message').className = 'warning'; }
+        event.target.value = '';
+    });
+    for (const id of ['search', 'from', 'to']) $(id).addEventListener('input', render);
+    $('clear').addEventListener('click', () => { $('from').value = ''; $('to').value = ''; $('search').value = ''; render(); });
+    $('results').addEventListener('click', event => {
+        const toggle = event.target.closest('.lab-knowledge-toggle');
+        if (toggle) {
+            const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+            toggle.setAttribute('aria-expanded', String(expanded));
+            toggle.textContent = expanded ? 'Piilota teksti' : 'Näytä teksti';
+            document.getElementById(toggle.getAttribute('aria-controls')).hidden = !expanded;
+        }
+        const link = event.target.closest('.lab-visit-link');
+        if (link) window.dispatchEvent(new CustomEvent('kantain:open-visit', { detail: { id: link.dataset.visitId } }));
+    });
+    function getRows(filtered = false) {
+        if (!filtered) return rows;
+        const query = $('search').value.toLocaleLowerCase('fi');
+        return rows.filter(row => `${row.label} ${row.name} ${row.code} ${row.specimen} ${row.source}`.toLocaleLowerCase('fi').includes(query) && (!$('from').value || row.time?.slice(0, 10) >= $('from').value) && (!$('to').value || row.time?.slice(0, 10) <= $('to').value));
+    }
+    function visitResults(visit) {
+        return rows.filter(row => KantainLabs.matchVisit(row, visits) === visit);
+    }
+    function visitMarkup(visit) {
+        const linked = visitResults(visit);
+        if (!linked.length) return '';
+        return `<div class="mt-5"><h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Käyntiin liittyvät laboratoriotulokset</h4><div class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">${linked.map(row => `<button type="button" class="lab-result-link block w-full text-left py-2 px-3 mb-2 last:mb-0 bg-blue-100 dark:bg-blue-800/50 rounded-md hover:bg-blue-200 dark:hover:bg-blue-700/50" data-result-id="${esc(row.id)}"><span class="font-medium text-blue-700 dark:text-blue-300">${esc(row.label)}</span><span class="text-gray-600 dark:text-gray-300 text-sm ml-2">${esc(resultText(row))}</span></button>`).join('')}</div></div>`;
+    }
+    function openResult(id) {
+        const row = rows.find(item => item.id === id);
+        if (!row) return;
+        $('search').value = '';
+        $('from').value = '';
+        $('to').value = '';
+        render();
+        const card = [...$('results').children].find(item => item.dataset.study === row.identity);
+        if (card) {
+            const select = card.querySelector('.unit-selector select');
+            if (select) { select.value = row.unit; select.dispatchEvent(new Event('change')); }
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const point = [...card.querySelectorAll('circle')].find(item => item.dataset.resultId === id);
+            if (point) { point.focus({ preventScroll: true }); point.dispatchEvent(new Event('click')); }
+            card.classList.add('ring-4', 'ring-blue-500');
+            setTimeout(() => card.classList.remove('ring-4', 'ring-blue-500'), 2000);
+        }
+    }
+    window.KantainLabView = { load, getRows, visitResults, visitMarkup, openResult, snapshot: () => ({ labs: data, importStatus }), reset: () => { data = null; importStatus = null; rows = []; visits = []; prescriptions = []; $('input').value = ''; $('filename').textContent = ''; $('message').textContent = ''; render(); } };
+    try {
+        const embedded = JSON.parse($('data').textContent);
+        if (embedded?.format === 'kantain-kaikki-v1') {
+            mode(true);
+            document.getElementById('combined-input').value = JSON.stringify(embedded);
+            document.getElementById('process-data').click();
+        } else if (embedded) {
+            mode(false);
+            $('input').value = JSON.stringify(embedded.labs || embedded);
+            document.getElementById('json-input').value = JSON.stringify(embedded.visits || []);
+            document.getElementById('prescription-input').value = JSON.stringify(embedded.prescriptions || []);
+            document.getElementById('process-data').click();
+        } else render();
+    } catch (error) { $('message').textContent = error.message; }
+});
+
+</script>
+<script id="lab-knowledge">
+(function () {
+    const entries = [
+        ['snk03031', ['B-Hemoglobiini', 'B-Hb'], 'Hemoglobiini kuvaa veren punasolujen hapenkuljetukseen osallistuvan valkuaisaineen pitoisuutta. Tutkimus on keskeinen anemian toteamisessa. Matalaan arvoon voi liittyä esimerkiksi raudanpuute, veren menetys tai pitkäaikainen sairaus. Nestetasapaino ja hapensaanti voivat puolestaan vaikuttaa korkeaan arvoon. Tulosta tarkastellaan yhdessä muiden verenkuvan osien kanssa; pelkkä hemoglobiiniluku ei kerro muutoksen syytä.'],
+        ['snk03032', ['B-Eryt', 'B-HKR', 'B-Erytrosyytit', 'B-Erytrosyytit, tilavuusosuus'], 'Erytrosyyttitutkimus mittaa punasolujen lukumäärää. Hematokriitti kuvaa niiden osuutta veren tilavuudesta. Nämä ovat erillisiä suureita, vaikka ne muuttuvat usein samaan suuntaan hemoglobiinin kanssa. Niitä käytetään verenkuvan kokonaisarviossa esimerkiksi anemiaa selvitettäessä. Myös hapensaantiin vaikuttavat olosuhteet ja eräät lääkkeet voivat muuttaa punasoluarvoja.'],
+        ['snk03033', ['E-MCV', 'E-MCH', 'E-MCHC', 'E-RDW'], 'Punasoluindeksit kuvaavat punasolujen ominaisuuksia. MCV kertoo solujen keskikoosta, MCH solukohtaisesta hemoglobiinimäärästä ja MCHC hemoglobiinin pitoisuudesta punasoluissa. RDW kuvaa solukokojen vaihtelua. Indeksit auttavat selvittämään esimerkiksi anemian tyyppiä. Niitä tulkitaan yhdessä hemoglobiinin ja tarvittaessa rauta- tai vitamiinitutkimusten kanssa, sillä yksittäinen indeksimuutos voi johtua eri syistä.'],
+        ['snk03034', ['B-Leuk', 'B-Diffi', 'B-Lymf', 'B-Ly', 'B-Monos', 'B-Neut', 'B-Baso', 'B-Eos', 'L-Baso(A)', 'L-Eos(A)', 'L-Lymf(A)', 'L-Mono(A)', 'L-Neut(A)', 'Basof', 'Eosin', 'Lymfos', 'Monos', 'Neutros'], 'Leukosyytit ovat elimistön puolustukseen osallistuvia valkosoluja. Kokonaismäärän lisäksi erittelylaskennassa tarkastellaan neutrofiilejä, lymfosyyttejä, monosyyttejä, eosinofiilejä ja basofiilejä. Solumäärä ja prosenttiosuus ovat eri tuloksia. Tulehdukset, rasitus, stressi ja lääkkeet voivat vaikuttaa arvoihin. Valkosolujen kokonaismäärä kuuluu perusverenkuvaan, mutta erittelylaskenta on erillinen tutkimus.'],
+        ['snk03035', ['B-Trom', 'B-Tromb'], 'Trombosyytit eli verihiutaleet osallistuvat veren hyytymiseen. Niiden määrän tutkimista käytetään esimerkiksi mustelma- ja vuototaipumuksen selvittämiseen sekä sairauksien ja hoitojen seurantaan. Tulehdukset, lääkkeet ja verisolujen tuotantoon vaikuttavat tilanteet voivat muuttaa määrää. Yksilöllinen taso on usein melko vakaa, joten aikaisemmat tulokset auttavat muutoksen arvioinnissa.'],
+        ['snk03030', ['B-PVKT', 'B-PVK+T', 'B-TVK'], 'Perusverenkuva on tutkimuskokonaisuus, jossa tarkastellaan hemoglobiinia, punasoluja, valkosoluja ja verihiutaleita sekä punasolujen ominaisuuksia. Sitä käytetään monien oireiden selvittämisessä ja hoitojen seurannassa. Kokonaisuuden nimellä ei välttämättä ole yhtä numeerista tulosta: varsinaiset mittaukset löytyvät osatutkimuksista. Laajempi verenkuva voi sisältää lisäksi valkosolujen erittelyn.'],
+        ['snk03092', ['B-HbA1c'], 'HbA1c kuvaa hemoglobiiniin kiinnittyneen glukoosin osuutta. Se kertoo pidemmän ajan glukoositasosta eikä yksittäisen päivän vaihtelusta. Tutkimusta käytetään diabeteksen toteamisessa ja hoidon seurannassa. Punasolujen elinikään vaikuttavat tilanteet voivat muuttaa tulosta. Diabeteksen yksilöllinen hoitotavoite on eri asia kuin laboratorion terveelle väestölle ilmoittama viitealue.'],
+        ['snk03051', ['B-La'], 'Lasko kuvaa punasolujen laskeutumisnopeutta plasmassa. Sitä käytetään erityisesti tulehdusta aiheuttavien sairauksien selvittelyssä ja seurannassa. Muutos tapahtuu yleensä hitaammin kuin CRP:ssä, joten tutkimukset kertovat osittain eri asioista. Ikä, sukupuoli, raskaus ja anemia voivat vaikuttaa laskoon. Kohonnut arvo ei yksin osoita tiettyä sairautta.'],
+        ['snk03052', ['P-CRP'], 'CRP on maksan tuottama valkuaisaine, jonka pitoisuus voi nousta tulehdusten ja kudosvaurioiden yhteydessä. Se reagoi usein nopeasti ja soveltuu myös tilanteen seurantaan. CRP ei kuitenkaan yksin erottele luotettavasti kaikkia bakteeri- ja virustulehduksia. Laboratoriomääritys ja pikatesti voivat ilmoittaa pienen pitoisuuden eri raja-arvoilla; esimerkiksi alle-raja ei ole tarkka mittaus.'],
+        ['snk03063', ['P-Ca', 'P-Ca-albk', 'S-Ca-Ion', 'S-Ca-IonA', 'P-Ca-Ion'], 'Kalsiumia tarvitaan muun muassa hermojen ja lihasten toiminnassa. Kokonaiskalsium ja vapaa eli ionisoitunut kalsium mittaavat eri asioita, joten niiden tuloksia ei yhdistetä. Kokonaispitoisuuteen sisältyy myös valkuaisaineisiin sitoutunut kalsium. Elimistö säätelee veren kalsiumia tarkasti esimerkiksi lisäkilpirauhashormonin ja D-vitamiinin avulla. Näyte ja määritystapa ovat siksi tulkinnassa olennaisia.'],
+        ['snk03061', ['P-Na'], 'Natrium on elimistön nesteiden tärkeä suola. Veren natriumpitoisuuden tutkimista käytetään neste- ja suolatasapainon arviointiin. Munuaiset säätelevät natriumin erittymistä ja pitävät pitoisuutta sopivana elimistön toiminnalle. Verikokeen natriumarvo ei suoraan kerro syödyn suolan määrää. Tulos arvioidaan suhteessa nestetasapainoon ja tutkimuksen syyhyn.'],
+        ['snk03062', ['P-K'], 'Kalium on natriumin ohella tärkeä veren suola. Kalium ja kalsium ovat eri aineita, vaikka nimet muistuttavat toisiaan. Kaliumpitoisuus kuuluu elimistön suolatasapainoa kuvaaviin tutkimuksiin. Tavalliset ruokavalion vaihtelut eivät terveellä ihmisellä yleensä siirrä arvoa pois normaalilta alueelta. Tulkinnassa huomioidaan muut löydökset ja tutkimuksen taustalla oleva tilanne.'],
+        ['snk03121', ['P-Krea'], 'Kreatiniinia syntyy lihasten aineenvaihdunnassa ja poistuu verestä munuaisten kautta. Pitoisuutta käytetään munuaisten toiminnan arvioinnissa: poistumisen heikentyessä arvo voi suurentua. Kreatiniinin muodostuminen liittyy myös lihaksiin, joten yksittäisen luvun vertailu tarvitsee taustatietoja. Usein sen rinnalla ilmoitetaan laskennallinen munuaisten suodatusnopeus eli eGFR.'],
+        ['snk02001', ['Pt-GFRe', 'Pt-GFReEPI'], 'eGFR on laskennallinen arvio munuaisten suodatusnopeudesta. Se johdetaan yleensä kreatiniinituloksesta ja antaa pelkkää kreatiniinia tarkemman kuvan suodatustoiminnasta. Tulos ilmoitetaan tavallisesti suhteutettuna kehon pinta-alaan 1,73 m². Eri laskentamenetelmät on syytä huomioida seurannassa. Luku on arvio, ei suoraan mitattu virtsan määrä.'],
+        ['snk03350', ['S-D-vitamiini-25-OH', 'P-D-25', 'S-D-25'], 'D-25-tutkimus mittaa verenkierrossa olevaa kalsidiolia, joka on keskeinen D-vitamiinin muoto. Määritystä käytetään D-vitamiinin puutteen epäilyssä ja kalsiumaineenvaihdunnan selvittelyssä. D-vitamiinia muodostuu ihossa auringonvalossa ja saadaan ravinnosta. D-25 on eri tutkimus kuin erityistilanteissa käytettävä D-1,25-määritys.'],
+        ['snk99004', ['S-CDT'], 'CDT tarkoittaa transferriinin muotoa, jossa on tavallista vähemmän hiilihydraattiosia. Määritystä käytetään pitkäaikaisen runsaan alkoholinkäytön tunnistamiseen ja muutosten seurantaan. Tutkimus kuvaa valkuaisaineen muuttumista, eikä se mittaa suoraan veren alkoholipitoisuutta näytteenottohetkellä. Tulosta arvioidaan tutkimuksen tarkoituksen ja muun saatavilla olevan tiedon yhteydessä.'],
+        ['snk99010', ['B-PEth'], 'PEth on punasolujen solukalvoille alkoholin läsnä ollessa muodostuva yhdiste. Mittaus voi kuvata alkoholin käyttöä edeltävien viikkojen aikana. Yksittäisestä tuloksesta ei kuitenkaan voi päätellä täsmällistä käytettyä määrää tai kaikkia käyttökertoja. PEth ja CDT ovat eri tutkimuksia, ja niiden tuloksia seurataan erillisinä sarjoina.'],
+        ['snk03071', ['P-ALAT'], 'ALAT on erityisesti maksasolujen sisällä toimiva entsyymi. Veren pitoisuutta käytetään maksasolujen vaurion tai tulehduksen selvittämiseen. Arvo voi muuttua useasta syystä, joten muutos ei yksin osoita sen aiheuttajaa. Tutkimusta tarkastellaan yhdessä muiden maksa-arvojen, oireiden ja lääkitystietojen kanssa. Kaavion viitearvot ovat alkuperäisen laboratorion ilmoittamia.'],
+        ['snk03073', ['P-GT'], 'GT on entsyymi, jota esiintyy runsaasti maksan sappitiehyiden soluissa. Sen tutkimista käytetään maksan ja sappiteiden sairauksien selvittelyssä. Pitoisuus voi nousta esimerkiksi sapen kulun häiriöissä ja eräissä maksasairauksissa. GT on eri tutkimus kuin ALAT tai AFOS, vaikka niitä tarkastellaan usein yhdessä.'],
+        ['snk03072', ['P-AFOS'], 'AFOS eli alkalinen fosfataasi on entsyymi, jota esiintyy muun muassa maksassa ja luustossa. Tutkimusta käytetään maksan, sappiteiden ja luuston sairauksien selvittämisessä sekä seurannassa. Arvon nousu voi siis liittyä eri kudoksiin. Muiden tutkimusten avulla arvioidaan, mistä muutos on peräisin.'],
+        ['snk03074', ['P-Bil'], 'Bilirubiinia syntyy vanhojen punasolujen hajotessa. Sen mittausta käytetään muun muassa keltaisuuden syyn sekä maksan ja sappiteiden toiminnan selvittämiseen. Arvo voi liittyä myös punasolujen tavallista runsaampaan hajoamiseen. Kokonaisuus ja muut laboratoriotutkimukset auttavat erottamaan erilaisia syitä.'],
+        ['snk99007', ['P-Alb'], 'Albumiini on maksan tuottama valkuaisaine ja plasman runsain proteiini. Pitoisuutta käytetään muun muassa nestetasapainon, ravitsemustilan sekä maksan ja munuaisten toiminnan arvioinnissa. Albumiini kuvaa vain yhtä valkuaisainetta: se ei ole sama tutkimus kuin veren kokonaisproteiini. Tulosta tarkastellaan muun yleistilan ja tutkimusten yhteydessä.'],
+        ['snk03131', ['P-T4-V', 'S-T4-V'], 'T4-V mittaa veressä vapaana olevan tyroksiinihormonin osuutta. Kilpirauhanen tuottaa tyroksiinia aineenvaihdunnan säätelyyn. Suuri osa hormonista on sitoutuneena kuljettajavalkuaisaineisiin, mutta vapaa osa hoitaa hormonin tehtäviä. T4-V:tä käytetään kilpirauhasen toiminnan arvioinnissa usein yhdessä TSH-tutkimuksen kanssa.'],
+        ['snk03132', ['P-TSH', 'S-TSH'], 'TSH on aivolisäkkeen tuottama hormoni, joka ohjaa kilpirauhasen toimintaa. Sitä tutkitaan kilpirauhasen toimintahäiriöiden selvittämiseksi ja tyroksiinihoidon seurannassa. TSH-arvoa arvioidaan yleensä yhdessä vapaan tyroksiinin kanssa. Hoidon seurannan tavoitteet voivat erota uuden sairauden selvittämisessä käytettävästä tulkinnasta.'],
+        ['snk03081', ['P-Kol', 'fP-Kol'], 'Kokonaiskolesteroli mittaa plasmassa olevan kolesterolin yhteismäärää. Se ei erottele eri kuljettajahiukkasiin liittyviä osuuksia. Siksi samaan tutkimuskokonaisuuteen kuuluu usein HDL-, LDL- ja triglyseridimäärityksiä. Kolesterolia tarvitaan esimerkiksi solukalvojen rakenteisiin, mutta valtimosairauksien riskiä arvioitaessa olennaista on laajempi kokonaisuus.'],
+        ['snk03082', ['P-Kol-LDL', 'fP-Kol-LDL'], 'LDL-hiukkaset kuljettavat kolesterolia kudoksiin ja myös valtimoiden seinämiin. LDL-kolesterolia käytetään valtimosairauksien riskin ja rasva-aineenvaihdunnan hoidon arviointiin. Hoitotavoite asetetaan yksilöllisen kokonaisriskin perusteella. Siksi kaikille yhteinen laboratorion viiteraja ei välttämättä vastaa henkilön omaa hoitotavoitetta.'],
+        ['snk03083', ['P-Kol-HDL', 'fP-Kol-HDL'], 'HDL on yksi veren kolesterolia kuljettavista hiukkastyypeistä. HDL-pitoisuudesta on hyötyä valtimosairauksien riskin arvioinnissa yhdessä muiden rasva-arvojen kanssa. HDL ei kuitenkaan ole itsenäinen hoidon tavoite, eikä sen nostaminen numerona yksin kerro hoidon hyödystä. Tulosta tarkastellaan osana kokonaisriskiä.'],
+        ['snk03084', ['P-Trigly', 'fP-Trigly'], 'Triglyseridit ovat tavallisen rasvan pääasiallinen muoto. Veren triglyseriditutkimus kuvaa rasva-aineenvaihduntaa ja tehdään usein kolesterolimääritysten yhteydessä. Syöminen voi vaikuttaa pitoisuuteen. Laboratorio voi käyttää paasto- tai ei-paastonäytettä, joten näytteenotto-olosuhteet on hyvä huomioida eri ajankohtien tuloksia vertailtaessa.'],
+        ['snk03110', ['P-Amyl', 'P-AmylP', 'P-Amylaasi, haimaperäinen'], 'Amylaasi on tärkkelystä hajottava ruoansulatusentsyymi. Sitä erittyy muun muassa haimasta, ja vaurioituneista soluista sitä voi päästä tavallista enemmän vereen. Amylaasia voidaan tutkia verestä tai virtsasta. Kokonaisamylaasi ja haimaperäisen amylaasin määritys ovat eri tutkimuksia; pitoisuuden muutos tarvitsee tutkimuksen syyhyn liittyvän kokonaisarvion.'],
+        ['snk03141', ['P-CK'], 'Kreatiinikinaasia esiintyy runsaasti lihassoluissa. Kun lihassoluja vaurioituu, entsyymiä voi päästä vereen enemmän. Tutkimusta käytetään erityisesti lihaksiin liittyvien sairauksien selvittämisessä. Myös voimakas, totuttua suurempi lihasrasitus voi nostaa arvoa. CK ja munuaistoiminnan arvioinnissa käytettävä kreatiniini ovat eri tutkimuksia.'],
+        ['snk03142', ['P-TnI'], 'Troponiinimääritystä käytetään sydänlihasvaurion osoittamiseen. Se kuuluu äkillisten sydänoireiden tutkimuksiin EKG:n ja muun arvion ohella. Tulos muuttuu ajan kuluessa vaurion jälkeen, joten näytteenottohetki ja peräkkäiset mittaukset ovat olennaisia. Troponiini I ja troponiini T sekä eri määritysmenetelmät eivät ole suoraan sama tulossarja.'],
+        ['snk03151', ['U-KemSeul'], 'Virtsan kemiallinen seulonta tehdään testiliuskalla. Se voi antaa suuntaa esimerkiksi eräiden aineiden ja solujen esiintymisestä virtsassa. Plusmerkein ilmoitettu vastaus ei ole tarkka pitoisuusmittaus. Näytteenotto ja muut tekijät voivat vaikuttaa liuskan reaktioon, joten poikkeavaa seulontatulosta voidaan tarkentaa muilla tutkimuksilla.'],
+        ['snk03152', ['U-Solut', 'U-Eryt', 'U-Leuk', 'U-Levyep', 'U-PienEp', 'U-Lieriöt', 'U-Bakt'], 'Virtsan partikkelien laskennassa tutkitaan virtsassa olevia soluja ja muita hiukkasia. Tutkimus antaa kemiallista seulontaa tarkempaa tietoa solumääristä. Puna- ja valkosolut ovat eri osatuloksia, ja mukana voidaan ilmoittaa esimerkiksi epiteelisoluja. Löydöksiä käytetään munuaisten ja virtsateiden tilanteen arvioinnissa yhdessä muiden tutkimusten kanssa.'],
+        ['snk03153', ['U-BaktVi'], 'Virtsan bakteeriviljelyllä selvitetään bakteerien kasvua näytteessä. Näytteen oikea ottaminen, rakossaoloaika ja säilytys vaikuttavat tutkimuksen luotettavuuteen. Viljelyvastaus voi sisältää bakteerin nimen ja herkkyystietoja, joten se esitetään tekstinä numeerisen käyrän sijasta. Näytteenoton tarkemmat ohjeet löytyvät alkuperäisestä artikkelista.'],
+        ['snk99012', ['U-Huum-O', 'U-HuumLCt', 'U-DS4', 'U-Amfet-O', 'U-Bendi-O', 'U-Kanna-O', 'U-Opiaa-O', 'U-Metad-O', 'U-Koka-O', 'U-Bupre-O'], 'Huumetutkimuksia voidaan tehdä esimerkiksi virtsasta, verestä tai syljestä. Tutkimuksen tarkoitus ja käytetty näyte vaikuttavat siihen, mitä tulos kertoo. Virtsan seulonta ja tarkempi varmistustutkimus eivät ole sama määritys. Vastauksessa ilmoitettu löydös ja mahdollinen lausunto säilyvät tässä näkymässä tekstinä ilman automaattista yksilöllistä tulkintaa.'],
+        ["snk03154", ["nU-Alb"], "Yövirtsan albumiini auttaa havaitsemaan munuaisvaurion varhain, erityisesti diabeteksen seurannassa. Näytteestä mitataan albumiinin erittymistä keräysajan kuluessa. Myös esimerkiksi tulehdus voi lisätä albumiinia virtsassa, joten tulos arvioidaan tilanteen ja näytteenoton perusteella."],
+        ["snk03196", ["U-AlbKre", "nU-AlbKre"], "Albumiinin ja kreatiniinin suhde kertoo valkuaisen erittymisestä virtsaan. Tutkimusta käytetään munuaistaudin seulonnassa ja seurannassa esimerkiksi diabeteksessa ja verenpainetaudissa. Aamuvirtsan ja muun kertavirtsan näytteenotto-ohjeet eroavat toisistaan."],
+        ["snk03191", ["S-IgE", "Allergiatutkimukset"], "Allergiaa selvitetään oireiden ja altistumisen perusteella. Tutkimuksiin voivat kuulua vasta-ainemääritykset, ihotestit ja altistuskokeet. Tuloksen merkitys riippuu siitä, sopiiko löydös todellisiin oireisiin; yksittäinen laboratoriolöydös ei yksin ratkaise allergian syytä."],
+        ["snk99003", ["S-B12-TC2"], "Aktiivinen B12-vitamiini kuvaa elimistön käytettävissä olevaa vitamiinia. Määritystä käytetään B12-vitamiinin puutteen selvittämiseen. Puutteen taustalla voi olla esimerkiksi vähäinen saanti ravinnosta tai imeytymisen häiriö."],
+        ["snk99005", ["-CV19NhO", "pocABRC"], "Koronatutkimuksilla etsitään SARS-CoV-2-viruksen aiheuttamaa tartuntaa. Osa hengitystietutkimuksista tutkii samalla myös muita viruksia. Vastauksesta on tarkistettava tutkimuksen menetelmä ja se, mitä taudinaiheuttajia kyseinen tutkimus kattaa."],
+        ["snk03090", ["Diabeteksen laboratoriotutkimuksia"], "Glukoosin määritys on keskeinen tutkimus sokeriaineenvaihdunnan häiriöissä. Paastoglukoosi ja ilman paastoa mitattu glukoosi kuvaavat eri näytteenottotilanteita. Diabeteksen selvittelyssä ja seurannassa käytetään useita toisiaan täydentäviä tutkimuksia."],
+        ["snk03210", ["Pt-EKG", "EKG"], "EKG rekisteröi sydämen sähköistä toimintaa iholle asetettujen elektrodien kautta. Se antaa tietoa esimerkiksi sydämen rytmistä ja sähköimpulssin kulusta. Tutkimuksen varsinainen tulos on käyrä ja sen tulkinta, ei yksittäinen verikoearvo."],
+        ["snk03356", ["P-Ferrit", "S-Ferrit"], "Ferritiini on raudan varastointiin liittyvä proteiini. Pieni pitoisuus viittaa vähäisiin rautavarastoihin. Tulos ei kaikissa tilanteissa yksin sulje pois raudanpuutetta, joten sitä tarkastellaan muun tutkimustiedon kanssa."],
+        ["snk03358", ["P-FiDD"], "D-dimeeriä syntyy verihyytymän fibriinin hajotessa. Tutkimus voi auttaa sulkemaan pois laskimotukosta silloin, kun tukoksen ennakkotodennäköisyys on pieni. Kohonnut tulos ei yksin osoita veritulppaa."],
+        ["snk99008", ["fS-Folaat", "S-Folaat"], "Folaattia tarvitaan solujen jakautumiseen ja verisolujen muodostumiseen. Määritystä käytetään folaatin puutteen selvittämiseen, esimerkiksi tietynlaisen anemian yhteydessä. Folaattia saadaan ravinnosta, ja sen saanti sekä imeytyminen vaikuttavat pitoisuuteen."],
+        ["snk00002", ["S-FSH"], "FSH on aivolisäkkeen hormoni, joka osallistuu munarakkuloiden kypsymiseen ja sukusolujen tuotannon säätelyyn. Tutkimusta käytetään muun muassa kuukautishäiriöiden, lapsettomuuden ja murrosiän kehityksen selvittämisessä. Ikä ja kuukautiskierron vaihe vaikuttavat tulkintaan."],
+        ["snk03091", ["fP-Gluk", "P-Gluk", "P-Glukoosi"], "Glukoosi kuvaa verensokeria näytteenottohetkellä. Paaston jälkeen otettua arvoa ja ilman paastoa otettua arvoa tulkitaan eri tavoin. Määritystä käytetään diabeteksen ja muiden sokeriaineenvaihdunnan häiriöiden tutkimisessa ja seurannassa."],
+        ["snk03093", ["Pt-Gluk-R"], "Sokerirasituskokeessa seurataan glukoosipitoisuuden muutosta glukoosijuoman jälkeen. Kokeeseen kuuluu paastonäyte ja myöhempiä näytteitä. Näytteenottoajankohta ja tutkimuksen käyttötarkoitus määräävät, mitä tulkintarajoja käytetään."],
+        ["snk99014", ["S-HIVAgAb"], "HIV-yhdistelmätesti tutkii viruksen antigeenia ja vasta-aineita. Tartunnan ja näytteenoton välinen aika vaikuttaa siihen, voiko tartunta jo näkyä testissä. Ensimmäinen positiivinen löydös varmistetaan terveydenhuollossa lisätutkimuksella."],
+        ["snk03174", ["F-HepyAg", "S-HepyAb", "HepyNhO", "Pt-Hepy-R"], "Helikobakteeria voidaan tutkia ulosteesta, vasta-aineilla, hengitystestillä tai tähystyksen yhteydessä. Bakteeri elää mahalaukun limakalvolla ja voi aiheuttaa tulehdusta. Eri testit osoittavat eri asioita, joten menetelmä on huomioitava vastauksen tulkinnassa."],
+        ["snk99001", ["F-hHb"], "Ulosteen hemoglobiinitesti etsii ihmisperäistä verta ulosteesta. Positiivinen löydös voi viitata suoliston verenvuotoon ja edellyttää syyn selvittämistä. Negatiivinen tulos ei yksin sulje pois oireiden taustalla olevaa sairautta."],
+        ["snk03075", ["S-HAVAb", "S-HBsAg", "S-HBcAbM", "S-HCVAb", "S-HCVNhO"], "Hepatiittitutkimuksilla selvitetään virusperäisen maksatulehduksen aiheuttajaa, aktiivisuutta ja tartuttavuutta. Antigeeni-, vasta-aine- ja nukleiinihappotutkimukset mittaavat eri asioita. Vastauksen merkitys riippuu käytetystä testistä ja taudin vaiheesta."],
+        ["snk99002", ["F-Calpro"], "Kalprotektiini on valkosoluista peräisin oleva proteiini, jonka määrä ulosteessa voi lisääntyä suoliston tulehduksessa. Tutkimusta käytetään etenkin tulehduksellisten suolistosairauksien selvittelyssä ja seurannassa. Löydös arvioidaan yhdessä oireiden ja muiden tutkimusten kanssa."],
+        ["snk03140", ["-ChtrNhO", "-GcNhO", "-CtGcNhO", "U-ChtrNhO", "U-GcNhO", "U-CtGcNhO"], "Näytteestä etsitään klamydia- tai tippuribakteerin perimää. Näyte voidaan ottaa virtsasta tai mahdollisesta tartuntakohdasta. Yhdistelmätutkimus voi sisältää molemmat bakteerit; vastauksesta tarkistetaan, mikä osatutkimus on positiivinen."],
+        ["snk99011", ["S-Korsol"], "Kortisoli on lisämunuaiskuoren hormoni. Määritystä käytetään lisämunuaisten sairauksien selvittämiseen ja seurantaan. Pitoisuus vaihtelee voimakkaasti vuorokauden aikana, joten näytteenottoaika on olennainen osa tulkintaa."],
+        ["snk03010", ["B-Lakt-D"], "Geenitutkimus selvittää perinnöllistä alttiutta laktoosin imeytymishäiriölle. Se kuvaa perittyä geenimuotoa, ei yksittäisen ruokailun aiheuttamaa oiretta. Geenilöydöstä tarkastellaan yhdessä oireiden ja ruokavalion vaikutuksen kanssa."],
+        ["snk00003", ["S-LH"], "LH on aivolisäkkeen tuottama sukupuolitoimintaa säätelevä hormoni. Se osallistuu ovulaatioon ja kivesten hormonituotantoon. Määritystä käytetään esimerkiksi kuukautishäiriöiden, lapsettomuuden ja murrosiän kehityksen selvittämiseen."],
+        ["snk03250", ["Maksa-arvot"], "Maksan toimintaa ja vaurioita arvioidaan useilla verikokeilla. ALAT, AFOS ja GT painottavat eri ilmiöitä, joten ne eivät ole keskenään sama tutkimus. Tuloksia tarkastellaan kokonaisuutena yhdessä muiden löydösten kanssa."],
+        ["snk03352", ["P-proBNP"], "ProBNP-pitoisuus kasvaa sydänlihaksen venytyksen seurauksena. Määritystä käytetään sydämen vajaatoiminnan selvittämisessä muiden tutkimusten rinnalla. Ikä ja sukupuoli vaikuttavat viitearvoihin, eikä tulos yksin korvaa sydämen tutkimista."],
+        ["snk03161", ["Ps-StrVi"], "Nielun bakteeriviljelyllä selvitetään nielutulehduksen bakteeriperäistä aiheuttajaa. Se voi auttaa ratkaisemaan, tarvitaanko antibioottihoitoa. Tutkimustulos arvioidaan oireiden ja nielun löydösten kanssa."],
+        ["snk03203", ["PEF", "Pt-PEF"], "PEF mittaa uloshengityksen suurinta virtausnopeutta. Se auttaa astman selvittämisessä ja hoidon tehon seurannassa. Puhallustekniikka ja toistettavat mittausolosuhteet vaikuttavat tulosten vertailukelpoisuuteen."],
+        ["snk00004", ["S-PRL"], "Prolaktiini on aivolisäkkeen hormoni, joka vaikuttaa maidoneritykseen ja sukupuolitoiminnan säätelyyn. Pitoisuuden suurenemista voidaan selvittää esimerkiksi kuukautishäiriöiden tai muun hormonitoiminnan häiriön yhteydessä. Raskaus ja imetys nostavat pitoisuutta normaalistikin."],
+        ["snk03230", ["P-PSA"], "PSA on eturauhasen tuottama proteiini. Pitoisuuteen vaikuttavat esimerkiksi eturauhasen koko, ikä ja tulehdukset. Suurentunut PSA-arvo ei yksin tarkoita eturauhassyöpää, vaan syy arvioidaan jatkotutkimusten tarpeen yhteydessä."],
+        ["snk03212", ["Pt-Ras-EKG", "Rasitus-EKG"], "Rasitus-EKG:ssä sydämen sähköistä toimintaa tutkitaan fyysisen kuormituksen aikana. Sitä voidaan käyttää rasitukseen liittyvien oireiden ja sepelvaltimotaudin selvittämisessä. Tulokseen kuuluu käyrän lisäksi tieto oireista ja kuormituksen aikaisista havainnoista."],
+        ["snk03202", ["U-hCG-O", "P-hCG-tot", "S-hCG"], "Raskaustestit osoittavat hCG-hormonia virtsasta tai verestä. Istukka alkaa tuottaa hormonia raskauden alettua. Hormonimäärityksiä käytetään myös eräissä muissa tutkimustilanteissa, joten tulos arvioidaan näytteenoton tarkoituksen mukaan."],
+        ["snk99013", ["P-RF"], "Reumafaktori on autovasta-aine, jota tutkitaan esimerkiksi nivelreumaepäilyssä. Sitä voi esiintyä myös muissa sairauksissa ja terveillä. Negatiivinen tulos ei yksin sulje pois nivelreumaa eikä positiivinen tulos yksin vahvista sitä."],
+        ["snk00001", ["S-KeliSeu", "S-IgAkeli", "S-tTGAbA", "S-tTGAbG", "S-tGAbA"], "Keliakiaa selvitetään verestä mitattavilla vasta-aineilla. Seulontaan voi kuulua myös IgA-pitoisuus, sillä IgA-puutos vaikuttaa tutkimusmenetelmän valintaan. Vasta-aineita voidaan käyttää myös todetun keliakian seurannassa."],
+        ["snk03020", ["Senkan tarina"], "Artikkeli käsittelee laskotutkimuksen historiaa ja sen kehittymistä verinäytteen kerrostumisen havainnoinnista. Se on historiallinen taustateksti. Varsinaisen laskotuloksen tulkintaan on erillinen Lasko-artikkeli."],
+        ["snk03260", ["S-CCPAb"], "Sitrulliinipeptidivasta-aineita tutkitaan nivelreumaa epäiltäessä. Ne ovat elimistön omiin rakenteisiin liittyviä autovasta-aineita. Tutkimus täydentää oireiden, niveltutkimuksen ja muiden laboratoriotulosten arviointia."],
+        ["snk99009", ["Pt-EKG-Pa", "Holter-tutkimus"], "Holter-tutkimus rekisteröi sydämen sähköistä toimintaa pidemmän seuranta-ajan kuluessa. Sillä voidaan selvittää ajoittaisia rytmihäiriöitä ja arvioida hoidon tarvetta tai vaikutusta. Tallennetta verrataan myös seurannan aikana koettuihin oireisiin."],
+        ["snk03211", ["Sydänsairauksia", " joissa EKG:sta on hyötyä"], "EKG auttaa tunnistamaan sydämen rytmihäiriön laadun. Pelkkä pulssin nopeus tai epäsäännöllisyys ei kerro tarkkaa rytmihäiriötä. Artikkeli kuvaa erilaisia tilanteita, joissa sydänkäyrä tukee tutkimista."],
+        ["snk04080", ["S-Testo", "S-TestoVl", "S-TestoMS"], "Testosteroni osallistuu sukupuolitoiminnan säätelyyn. Pitoisuuteen vaikuttavat muun muassa ikä ja elimistön tila. Kokonaispitoisuus, vapaan testosteronin arvio ja eri määritysmenetelmät on erotettava toisistaan tuloksia verrattaessa."],
+        ["snk03357", ["P-TfR"], "Transferriinireseptori kuvastaa punasolujen tuotantoa ja voi suurentua raudanpuutteessa. Määritystä käytetään raudanpuuteanemian selvittämisessä ferritiinin rinnalla. Se voi täydentää arviota tilanteissa, joissa muut sairaudet vaikuttavat ferritiiniin."],
+        ["snk03040", ["P-INR"], "INR kuvaa veren hyytymistä suhteellisena lukuna. Sitä käytetään etenkin varfariinihoidon vaikutuksen seurantaan. Hoitotavoite on yksilöllinen; suurempi arvo merkitsee hitaampaa hyytymistä."],
+        ["snk03163", ["F-BaktNhO", "F-BaktVi"], "Ulosteen bakteeriviljelyllä tai nukleiinihappotestillä selvitetään tarvittaessa ripulin aiheuttajaa. Menetelmien kattamat bakteerit ja vastauksen muoto voivat erota. Näytteenoton tarve ratkaistaan oireiden ja tutkimustilanteen perusteella."],
+        ["snk03240", ["P-Uraat"], "Uraatti eli virtsahappo on puriiniaineenvaihdunnan lopputuote, jota poistuu munuaisten kautta. Pitoisuus voi suurentua tuotannon lisääntyessä tai poistumisen vähentyessä. Ravinto, aineenvaihdunta ja munuaisten toiminta vaikuttavat tulokseen."],
+        ["snk03122", ["P-Urea"], "Urea syntyy maksassa valkuaisaineiden aineenvaihdunnassa ja poistuu munuaisten kautta. Määritystä käytetään munuaisten toiminnan arvioinnissa. Myös ravitsemus, maksan tila ja nestetasapaino vaikuttavat pitoisuuteen."],
+        ["snk03162", ["Fl-TrHINa", "Fl-HiivaVi", "Fl-baktVr", "Sk-sienVi"], "Emätineritteen tutkimuksilla voidaan selvittää tulehduksen aiheuttajaa. Mikroskopia ja viljely täydentävät oireiden ja tutkimuslöydösten arviointia. Vastaus voi olla tekstimuotoinen tai kuvata löydöksen runsautta plusmerkein."],
+        ["snk05090", ["Virtsanäyte kotona"], "Virtsanäytteen ajoitus ja ottotapa vaikuttavat tutkimuksen luotettavuuteen. Runsas juominen voi laimentaa näytettä ja fyysinen rasitus muuttaa sen koostumusta. Noudata näytteen antavan laboratorion ohjeita; yksityiskohtaiset kotiotto-ohjeet löytyvät lähdeartikkelista."]
+    ].map(([id, names, text]) => ({ id, names, text, url: `https://www.terveyskirjasto.fi/${id}`, checked: '11.9.2026' }));
+    const titles = {"snk03071": "Alaniiniaminotransferaasi (P -ALAT)", "snk99007": "Albumiini plasmasta (P-Alb)", "snk03154": "Albumiini, mikroalbuminuria yövirtsasta (aamuvirtsasta) (nU-Alb)", "snk03196": "Albumiinin ja kreatiniinin suhde virtsasta (U- AlbKre) ja aamu- tai yövirtsasta (nU-AlbKre)", "snk03072": "Alkalinen fosfataasi (P -AFOS)", "snk03191": "Allergiatutkimukset, allergiavasta-aineet, ihopistokokeet, epikutaanitestit, altistuskokeet", "snk03110": "Amylaasi (P-Amyl, P-AmylP , U-AmylP)", "snk99003": "B12-vitamiini, transkobalamiini II:een sitoutunut (S-B12-TC2)", "snk03074": "Bilirubiini (P -Bil)", "snk03052": "C-reaktiivinen proteiini (P -CRP)", "snk99005": "Covid-19-testit, koronatestit (-CV19NhO ja pocABRC)", "snk03350": "D-vitamiini, D-vitamiini-25-OH (P-D-25)", "snk99004": "Desialotransferriini (S-CDT)", "snk03090": "Diabeteksen laboratoriotutkimuksia", "snk03210": "EKG (sydänfilmi)", "snk03356": "Ferritiini, plasmasta (P–Ferrit)", "snk03358": "Fibriinin D-dimeerit plasmasta (P-FiDD)", "snk99008": "Folaatti, seerumista, fS-Folaat", "snk00002": "Follikkelia stimuloiva hormoni, seerumista (S-FSH)", "snk99010": "Fosfatidyylietanoli (B -PEth)", "snk02001": "Glomerulussuodosnopeus (GFR) arvioituna CKD-EPI-kaavalla (Pt-GFRe)", "snk03091": "Glukoosi, paastosokeri (fP-Gluk) ja P-Glukoosi (P-Gluk)", "snk03093": "Glukoosikoe, oraalinen, lyhyt, eli ”sokerirasituskoe” (Pt-Gluk-R)", "snk03073": "Glutamyylitransferaasi (P -GT)", "snk03083": "HDL-kolesteroli eli \"hyvä kolesteroli\" (P-Kol-HDL)", "snk99014": "HIV-näyte, S -HI-virus antigeeni ja vasta-aineet (S -HIVAgAb)", "snk03174": "Helikobakteeritutkimukset, Helikobakteerin ulostetesti (F-HepyAg), Seerumin helikobakteeri-vasta-aineet (S-HepyAb), Helikobakteerin nukleiinihappo-testi (HepyNhO), Helikobakteerin hengitystesti (Pt-Hepy-R)", "snk03031": "Hemoglobiini (B-Hb)", "snk99001": "Hemoglobiini, ihmisen ulosteesta (F-hHb)", "snk03092": "Hemoglobiini-A1c, verestä (B-HbA1c)", "snk03075": "Hepatiittivirustutkimukset (S-HAVAb, S -HBsAg, S -HBcAbM, S -HCVAb, S -HCVNhO jne.)", "snk99012": "Huumetestit", "snk03062": "Kalium (P -K)", "snk99002": "Kalprotektiini, ulosteesta (F -Calpro)", "snk03063": "Kalsium (P-Ca ja Ca-Ion)", "snk03140": "Klamydia- ja tippuritestit (-ChtrNhO, -GcNhO, -CtGcNhO)", "snk03081": "Kolesteroli (P -Kolesteroli, P -Kol)", "snk03141": "Kreatiinikinaasi (P-CK)", "snk03121": "Kreatiniini (P- Krea)", "snk03082": "LDL-kolesteroli eli \"paha kolesteroli\" (P -Kol-LDL)", "snk99011": "Laboratoriotutkimusten tulkinta", "snk03010": "Laktoosimalabsorptioon liittyvä geenimuutos, DNA-tutkimus verestä (B-Lakt-D)", "snk03051": "Lasko (B -La)", "snk03034": "Leukosyytit (B- Leuk)", "snk00003": "Luteinisoiva hormoni, seerumista (S-LH)", "snk03250": "Maksa-arvot (maksakokeet)", "snk03061": "Natrium (P -Na)", "snk03352": "Natriureettinen peptidi, B-tyypin N-terminaalinen propeptidi (P–proBNP)", "snk03161": "Nieluviljely (Ps-StrVi)", "snk03132": "P -Tyreotropiini (P -TSH)", "snk03203": "PEF (uloshengityksen huippuvirtaus)", "snk03030": "Perusverenkuva ja trombosyytit (B -PVKT)", "snk00004": "Prolaktiini, seerumista (S-PRL)", "snk03230": "Prostataspesifinen antigeeni, ”eturauhaskoe” (P-PSA)", "snk03033": "Punasoluindeksit (E- MCV, E- MCH, E- MCHC, E- RDW)", "snk03032": "Punasolujen määrä (B-Eryt) ja hematokriitti (B-Hkr)", "snk03212": "Rasitus-EKG", "snk03202": "Raskaustestit, Koriongonadotropiini (kval), virtsasta, U -hCG-O, Koriongonadotropiini, totaali, plasmasta P -hCG-tot, Koriongonadotropiini (kval), seerumista, S- hCG", "snk99013": "Reumafaktori, plasmasta (P -RF)", "snk00001": "S -Keliakiaseulonta (S-KeliSeu, S-IgA, S-IgAkeli, S-tTGAbA, S-tTGAbG)", "snk03020": "Senkan tarina", "snk03260": "Sitrulliinipeptidivasta-aineet (S-CCPAb)", "snk99009": "Sydämen EKG:n pitkäaikaisrekisteröinti eli Holter-tutkimus", "snk03211": "Sydänsairauksia, joissa EKG:sta on hyötyä", "snk04080": "Testosteroni (S-Testo, S-TestoVl ja S-TestoMS)", "snk03357": "Transferriinireseptori, plasmasta P-TfR", "snk03084": "Triglyseridit (P -Trigly)", "snk03040": "Tromboplastiiniaika (P-INR)", "snk03035": "Trombosyytit (B-Tromb)", "snk03142": "Troponiini (P-TnI)", "snk03131": "Tyroksiini, vapaa (P -T4-V)", "snk03163": "Ulosteen nukleiinihapon osoitus ja ulosteviljely (F -BaktNhO, F -BaktVi )", "snk03240": "Uraatti (P-Uraat)", "snk03122": "Urea (P-Urea)", "snk03162": "Valkovuodon eli emätineritteen laboratoriotutkimukset, (Fl-TrHINa, Fl-HiivaVi, Fl-baktVr, Sk-sienVi)", "snk03153": "Virtsan bakteeriviljely (U-BaktVi), U -Bakteeri, viljely", "snk03151": "Virtsan kemiallinen seulonta (U- KemSeul)", "snk03152": "Virtsan partikkelien koneellinen peruslaskenta (U-solut)", "snk05090": "Virtsanäyte kotona"};
+    for (const entry of entries) { entry.title = titles[entry.id]; if (entry.id !== "snk99011" && !entry.names.includes(entry.title)) entry.names.push(entry.title); }
+    window.KantainLabKnowledge = {
+        entries,
+        find(row) {
+            const canonical = window.KantainLabs.aliasIndex([]);
+            const keys = new Set([row.identity, canonical(row.name).key, window.KantainLabs.nameKey(row.name), ...(row.aliases || [])]);
+            return entries.find(entry => entry.names.some(name => keys.has(canonical(name).key) || keys.has(window.KantainLabs.nameKey(name)))) || null;
+        }
+    };
+})();
+
+</script>
+<script id="lab-export">
+(function () {
+    const clean = value => String(value ?? '').replace(/[µμ]/g, 'u').replace(/[≤]/g, '<=').replace(/[≥]/g, '>=').replace(/\u00a0/g, ' ').trim();
+    const plain = value => new DOMParser().parseFromString(String(value || '').replace(/<br\s*\/?>|<\/p>|<\/div>|<\/tr>/gi, '\n'), 'text/html').body.textContent || '';
+    const visitKey = visit => `visit:${visit.tunniste || visit.tempSetId || visit.oid}`;
+    const rxKey = rx => `rx:${rx.setId || rx.oid}`;
+    const resultValue = row => `${row.raw}${row.unitInference ? ' ' + row.unit + ' (yksikkö päätelty)' : ''}`;
+    const date = value => value ? new Date(value).toLocaleDateString('fi-FI') : 'Ei päivämäärää';
+    function download(blob, name) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    async function pdf(bundle, options = {}) {
+        if (!window.jspdf?.jsPDF) throw new Error('PDF-kirjasto ei ole latautunut. Tarkista verkkoyhteys ja avaa tiedosto uudelleen.');
+        const doc = new window.jspdf.jsPDF('p', 'mm', 'a4');
+        const margin = 14, width = 182, bottom = 281;
+        let y = margin;
+        const destinations = new Map(), links = [];
+        const rows = options.rows || KantainLabs.normalize(bundle.labs);
+        const visits = bundle.visits || [], prescriptions = bundle.prescriptions || [];
+        const page = () => doc.internal.getCurrentPageInfo().pageNumber;
+        const room = height => { if (y + height > bottom) { doc.addPage(); y = margin; } };
+        function text(value, size = 10, bold = false, target = null) {
+            doc.setFont('helvetica', bold ? 'bold' : 'normal').setFontSize(size).setTextColor(target ? 35 : 30, target ? 90 : 30, target ? 170 : 30);
+            for (const paragraph of clean(value).split('\n')) {
+                for (const line of doc.splitTextToSize(paragraph || ' ', width)) {
+                    room(6);
+                    doc.text(line, margin, y);
+                    if (target) links.push({ page: page(), y: y - 4, target });
+                    y += 5;
+                }
+            }
+        }
+        function heading(value, key) {
+            room(20);
+            y += 5;
+            if (key) destinations.set(key, { pageNumber: page(), top: Math.max(0, (y - 8) * doc.internal.scaleFactor) });
+            text(value, 13, true);
+            y += 2;
+        }
+        function fields(value, prefix = '', depth = 0) {
+            if (value === null || value === undefined || depth > 12) return;
+            if (Array.isArray(value)) { value.forEach((item, index) => fields(item, `${prefix} ${index + 1}`, depth + 1)); return; }
+            if (typeof value === 'object') {
+                for (const [key, item] of Object.entries(value)) {
+                    if (/^(oid|setId|tunniste|tempSetId|linkedVisitId|linkedPrescriptions|linkedVisit)$/.test(key)) continue;
+                    const label = key.replace(/([a-zäö])([A-ZÄÖ])/g, '$1 $2');
+                    fields(item, prefix ? `${prefix} / ${label}` : label, depth + 1);
+                }
+                return;
+            }
+            if (String(value).trim()) text(`${prefix}: ${plain(value)}`, 9);
+        }
+        function chart(group) {
+            const points = group.filter(row => row.value !== null && row.time);
+            if (!points.length) return;
+            room(62);
+            const top = y + 4, height = 40, left = margin + 16, chartWidth = width - 20;
+            const times = points.map(row => new Date(row.time).getTime());
+            const t0 = Math.min(...times), t1 = Math.max(...times);
+            const values = points.flatMap(row => [row.value, row.low, row.high].filter(v => v !== null));
+            const min = Math.min(...values), max = Math.max(...values), padding = Math.max((max - min) * 0.1, Math.abs(max) * 0.02, 0.001);
+            const lo = min >= 0 ? Math.max(0, min - padding) : min - padding, hi = max + padding;
+            const x = t => left + (t1 === t0 ? chartWidth / 2 : (t - t0) / (t1 - t0) * chartWidth);
+            const py = value => top + height - (value - lo) / (hi - lo) * height;
+            doc.setFontSize(8).setFont('helvetica', 'normal');
+            for (let i = 0; i <= 4; i++) {
+                const v = lo + (hi - lo) * i / 4;
+                doc.setDrawColor(220).setLineWidth(0.15).line(left, py(v), left + chartWidth, py(v));
+                doc.setTextColor(80).text(Number(v.toPrecision(3)).toLocaleString('fi-FI'), left - 2, py(v) + 1, { align: 'right' });
+            }
+            let previous = null;
+            for (const [index, row] of points.entries()) {
+                const px = x(times[index]);
+                doc.setDrawColor(50, 150, 85).setLineWidth(0.4);
+                if (row.low !== null && row.high !== null) doc.line(px, py(row.low), px, py(row.high));
+                if (previous && !row.comparator) doc.setDrawColor(37, 99, 235).line(previous.x, previous.y, px, py(row.value));
+                doc.setDrawColor(37, 99, 235).setFillColor(row.comparator ? 255 : 37, row.comparator ? 255 : 99, row.comparator ? 255 : 235).circle(px, py(row.value), 0.8, 'FD');
+                previous = row.comparator ? null : { x: px, y: py(row.value) };
+            }
+            doc.setTextColor(80).text(date(t0), left, top + height + 5);
+            doc.text(date(t1), left + chartWidth, top + height + 5, { align: 'right' });
+            y = top + height + 12;
+        }
+        heading(options.history ? 'Kantain - koko historia' : 'Laboratoriotulokset');
+        if (!bundle.complete) text(`Keskeneräinen aineisto: ${(bundle.errors || []).join(' ')}`);
+        if (options.history) {
+            text(`${visits.length} potilaskäyntiä | ${prescriptions.length} reseptiä | ${rows.length} laboratoriotulosta`);
+            heading('Potilaskäynnit');
+            for (const [index, visit] of [...visits].sort((a, b) => String(b.pvm).localeCompare(String(a.pvm))).entries()) {
+                document.getElementById('progress-text').textContent = `Potilaskäynnit ${index + 1}/${visits.length}`;
+                if (index % 10 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+                const org = (visit.organisaatiotiedot || []).map(item => item.organisaationNimi || '').filter(Boolean).join(' / ');
+                heading(`${visit.pvmStr || date(visit.pvm)} - ${org || 'Potilaskäynti'}`, visitKey(visit));
+                if (visit.hoidonTyyppi) text(visit.hoidonTyyppi);
+                for (const diagnosis of visit.diagnoosienTiedot || []) text(`${diagnosis.koodi || ''} ${diagnosis.fi || ''}`);
+                for (const rx of visit.linkedPrescriptions || []) text(`Resepti: ${rx.valmiste || ''} ${rx.vahvuus || ''}`, 10, false, rxKey(rx));
+                for (const row of rows.filter(row => KantainLabs.matchVisit(row, visits) === visit)) text(`${row.label}: ${resultValue(row)} | ${date(row.time)} | Viitearvo ${row.reference || '-'}`, 9, false, `lab:${row.identity}`);
+                for (const entry of visit.details?.potilaskertomukset || []) {
+                    const who = entry.merkinnanTekija || {};
+                    heading([who.tekija || who.nimi, who.organisaatioNimi || who.palveluyksikko, who.naytettavaAika || who.tapahtumaAika].filter(Boolean).join(' - '));
+                    text(plain(entry.nayttomuoto), 10);
+                }
+                if (!visit.details) text('Käynnin tarkemmat tiedot puuttuvat.');
+            }
+            heading('Reseptit');
+            for (const rx of [...prescriptions].sort((a, b) => String(b.aikaleima).localeCompare(String(a.aikaleima)))) {
+                heading(`${rx.valmiste || 'Resepti'} ${rx.vahvuus || ''} - ${date(rx.aikaleima)}`, rxKey(rx));
+                const linked = visits.find(v => [v.tempSetId, v.oid].includes(rx.linkedVisitId));
+                if (linked) text(`Potilaskäynti ${linked.pvmStr || date(linked.pvm)}`, 10, false, visitKey(linked));
+                fields(rx);
+            }
+        }
+        if (options.history) heading('Laboratoriotutkimukset');
+        const groups = new Map();
+        for (const row of rows) { if (!groups.has(row.identity)) groups.set(row.identity, []); groups.get(row.identity).push(row); }
+        for (const group of [...groups.values()].sort((a, b) => String(b.at(-1).time).localeCompare(String(a.at(-1).time)))) {
+            heading(group[0].label, `lab:${group[0].identity}`);
+            for (const unit of new Set(group.filter(row => row.value !== null).map(row => row.unit))) { text(unit || 'Yksikköä ei ilmoitettu', 9); chart(group.filter(row => row.unit === unit)); }
+            for (const row of [...group].reverse()) {
+                text(`${date(row.time)}${row.time?.includes('T') ? ' ' + row.time.slice(11, 16) : ''} | ${resultValue(row)} | Viitearvo: ${row.reference || '-'}`, 10, true);
+                text([row.assessment, row.status, row.source].filter(Boolean).join(' | '), 9);
+                const linked = KantainLabs.matchVisit(row, visits);
+                if (linked) text(`Potilaskäynti ${linked.pvmStr || date(linked.pvm)}`, 9, false, options.history ? visitKey(linked) : null);
+                const extra = row.details.tutkimusYhteenveto?.tutkimuksenLisatiedot;
+                if (extra) text(plain(extra), 9);
+                for (const statement of row.details.lausunnot || []) text(`${statement.lausuntoAjankohta || ''} ${plain(statement.lausunto)}`, 9);
+                y += 2;
+            }
+        }
+        for (const link of links) {
+            const target = destinations.get(link.target);
+            if (target) { doc.setPage(link.page); doc.link(margin, link.y, width, 5, target); }
+        }
+        for (let i = 1; i <= doc.getNumberOfPages(); i++) {
+            doc.setPage(i).setFontSize(8).setFont('helvetica', 'normal').setTextColor(120);
+            doc.text(`${i} / ${doc.getNumberOfPages()}`, 196, 290, { align: 'right' });
+        }
+        if (options.save !== false) doc.save(options.filename || 'kantain.pdf');
+        return doc;
+    }
+    async function yearZip(bundle, rows) {
+        if (!window.JSZip) throw new Error('ZIP-kirjasto ei ole latautunut.');
+        const zip = new window.JSZip();
+        const years = [...new Set(rows.map(row => row.time?.slice(0, 4) || 'ilman-paivamaaraa'))].sort().reverse();
+        for (const year of years) {
+            const doc = await pdf(bundle, { rows: rows.filter(row => (row.time?.slice(0, 4) || 'ilman-paivamaaraa') === year), save: false });
+            zip.file(`laboratoriotulokset_${year}.pdf`, doc.output('arraybuffer'));
+        }
+        download(await zip.generateAsync({ type: 'blob' }), 'laboratoriotulokset_per_vuosi.zip');
+    }
+    window.KantainExport = { pdf, yearZip };
+})();
+
+</script>
+<script id="linked-data">
+(function (root) {
+    const copy = value => JSON.parse(JSON.stringify(value));
+    const canonical = value => {
+        if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+        if (value && typeof value === 'object') return '{' + Object.keys(value).sort().filter(key => value[key] !== undefined).map(key => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}';
+        return JSON.stringify(value);
+    };
+    async function id(kind, value) {
+        const bytes = new TextEncoder().encode(canonical(value));
+        const digest = await root.crypto.subtle.digest('SHA-256', bytes);
+        return kind + '_' + [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+    const chronological = (a, b) => (a.time === null) - (b.time === null) || String(a.time || '').localeCompare(String(b.time || '')) || a.id.localeCompare(b.id);
+    async function build(bundle) {
+        const labs = root.KantainLabs;
+        const raw = copy(bundle);
+        const visits = raw.visits || [], prescriptions = raw.prescriptions || [];
+        const rows = labs.normalize(raw.labs);
+        const output = { format: 'kantain-linked-v1', schemaVersion: 1, exportedAt: new Date().toISOString(), complete: raw.complete, errors: raw.errors || [], ordering: { labResults: 'oldest-first', missingDates: 'last', equalDates: 'id-ascending' }, visits: {}, prescriptions: {}, labTests: {}, labEvents: {}, labStudies: {}, indexes: { labTestIdsByName: {}, labResultLocations: {}, visitIdsChronological: [], prescriptionIdsChronological: [] }, source: { ...raw, visits: undefined, prescriptions: undefined, labs: { ...raw.labs, events: undefined } } };
+        const visitIds = new Map(), oldResultIds = new Map();
+        const used = new Map();
+        const unique = base => { const count = (used.get(base) || 0) + 1; used.set(base, count); return count === 1 ? base : `${base}_${count}`; };
+        for (const visit of visits) {
+            const source = { ...visit };
+            delete source.linkedPrescriptions;
+            const stable = visit.tunniste || visit.oid;
+            const fallback = { ...source, tempSetId: undefined, index: undefined };
+            const key = unique(await id('visit', stable || fallback));
+            visitIds.set(visit, key);
+            output.visits[key] = { id: key, sourceId: stable || null, time: labs.date(visit.pvm || visit.alkuPvm), prescriptionIds: [], labTestIds: [], labResultIds: [], source };
+        }
+        for (const prescription of prescriptions) {
+            const source = { ...prescription };
+            delete source.linkedVisitId;
+            const stable = prescription.setId || prescription.oid;
+            const key = unique(await id('prescription', stable || source));
+            const prescribedOn = prescription.versions?.laakemaaraysVersiot?.at(-1)?.maaraaja?.maarayshetki?.slice(0, 10);
+            const linked = visits.filter(visit => (visit.linkedPrescriptions || []).some(rx => rx.setId === prescription.setId && rx.oid === prescription.oid) || (prescribedOn && (visit.pvm || visit.alkuPvm)?.slice(0, 10) === prescribedOn));
+            const visitLinks = linked.map(visit => ({ visitId: visitIds.get(visit), basis: 'same-date-inferred' }));
+            output.prescriptions[key] = { id: key, sourceId: stable || null, time: labs.date(prescription.aikaleima), visitIds: visitLinks.map(link => link.visitId), visitLinks, source };
+            for (const link of visitLinks) output.visits[link.visitId].prescriptionIds.push(key);
+        }
+        const groups = new Map();
+        for (const row of rows) { if (!groups.has(row.identity)) groups.set(row.identity, []); groups.get(row.identity).push(row); }
+        const typeIds = new Map();
+        for (const [identity, group] of [...groups].sort(([a], [b]) => a.localeCompare(b))) {
+            const key = await id('labtest', identity);
+            typeIds.set(identity, key);
+            const aliases = [...new Set(group.flatMap(row => [row.name, row.label, ...row.aliases]))].sort();
+            output.labTests[key] = { id: key, name: group[0].label, canonicalName: identity, aliases, units: [...new Set(group.map(row => row.unit).filter(Boolean))].sort(), resultOrder: 'oldest-first', results: [] };
+            for (const name of aliases) {
+                for (const lookup of new Set([name, labs.nameKey(name)])) {
+                    if (!Object.hasOwn(output.indexes.labTestIdsByName, lookup)) Object.defineProperty(output.indexes.labTestIdsByName, lookup, { value: [], enumerable: true });
+                    if (!output.indexes.labTestIdsByName[lookup].includes(key)) output.indexes.labTestIdsByName[lookup].push(key);
+                }
+            }
+        }
+        for (const event of raw.labs.events) {
+            const eventRows = rows.filter(row => row.id.startsWith(`${event.tunniste}/${event.ajankohdanAvain}/`));
+            const linkedVisit = eventRows.length ? labs.matchVisit(eventRows[0], visits) : null;
+            const source = { ...event };
+            delete source.studies;
+            const stableContent = { visit: event.linkedVisit?.tunniste || linkedVisit?.tunniste || null, time: event.ajankohdanAvain, organisations: event.organisaatiotiedot, studies: Object.values(event.studies || {}).map(canonical).sort(), summary: event.details?.yhteenveto };
+            const eventId = unique(await id('labevent', stableContent));
+            const eventNode = { id: eventId, visitId: linkedVisit ? visitIds.get(linkedVisit) : null, visitLinkBasis: linkedVisit ? 'omakanta-reference' : null, studyIds: [], resultIds: [], source };
+            output.labEvents[eventId] = eventNode;
+            const items = [...(event.details?.tehdytTutkimukset || [])];
+            for (const index of Object.keys(event.studies || {})) if (!items.some(item => String(item.index) === index)) items.push({ index });
+            for (const item of items) {
+                const full = event.studies?.[item.index];
+                const studyId = unique(await id('labstudy', { eventId, data: full || { ...item, index: undefined } }));
+                output.labStudies[studyId] = { id: studyId, eventId, sourceIndex: item.index, resultIds: [], complete: Boolean(full), source: full || null };
+                eventNode.studyIds.push(studyId);
+                const studyRows = eventRows.filter(row => row.id.startsWith(`${event.tunniste}/${event.ajankohdanAvain}/${item.index}/`));
+                for (const row of studyRows) {
+                    const testId = typeIds.get(row.identity);
+                    const resultId = unique(await id('labresult', { studyId, position: row.id.split('/').at(-1) }));
+                    oldResultIds.set(row.id, resultId);
+                    const result = { id: resultId, testId, eventId, studyId, visitId: eventNode.visitId, time: row.time, name: row.name, code: row.code, value: row.value, comparator: row.comparator, unit: row.unit || null, originalUnit: row.originalUnit || null, originalValue: row.raw, unitInference: row.unitInference ? copy(row.unitInference) : null, reference: { text: row.reference, low: row.low, high: row.high }, specimen: row.specimen, organisation: row.source, assessment: row.assessment, status: row.status, incomplete: row.incomplete };
+                    output.labTests[testId].results.push(result);
+                    output.labStudies[studyId].resultIds.push(resultId);
+                    eventNode.resultIds.push(resultId);
+                    if (result.visitId) {
+                        const visit = output.visits[result.visitId];
+                        visit.labResultIds.push(resultId);
+                        if (!visit.labTestIds.includes(testId)) visit.labTestIds.push(testId);
+                    }
+                }
+            }
+        }
+        for (const test of Object.values(output.labTests)) {
+            test.results.sort(chronological);
+            for (const [index, result] of test.results.entries()) {
+                if (result.unitInference) result.unitInference.evidence = result.unitInference.evidence.map(old => oldResultIds.get(old)).filter(Boolean);
+                output.indexes.labResultLocations[result.id] = { testId: test.id, index };
+            }
+        }
+        const sortedIds = table => Object.values(table).sort(chronological).map(node => node.id);
+        output.indexes.visitIdsChronological = sortedIds(output.visits);
+        output.indexes.prescriptionIdsChronological = sortedIds(output.prescriptions);
+        output.counts = { visits: visits.length, prescriptions: prescriptions.length, labTests: Object.keys(output.labTests).length, labEvents: Object.keys(output.labEvents).length, labStudies: Object.keys(output.labStudies).length, labResults: Object.keys(output.indexes.labResultLocations).length };
+        if (output.counts.labResults !== rows.length) throw new Error('Kaikki laboratoriotulokset eivät siirtyneet vientiin.');
+        validate(output);
+        return output;
+    }
+    function validate(data) {
+        const fail = () => { throw new Error('Linkitetyn tiedoston rakenne tai tunnisteviittaus on virheellinen.'); };
+        if (data?.format !== 'kantain-linked-v1' || data.schemaVersion !== 1) fail();
+        for (const name of ['visits', 'prescriptions', 'labTests', 'labEvents', 'labStudies']) if (!data[name] || typeof data[name] !== 'object' || Array.isArray(data[name])) fail();
+        const resultIds = new Set();
+        const has = (table, key) => typeof key === 'string' && Object.hasOwn(table, key);
+        for (const [key, test] of Object.entries(data.labTests)) {
+            if (key !== test.id || !Array.isArray(test.results)) fail();
+            for (const [index, result] of test.results.entries()) {
+                if (resultIds.has(result.id) || result.testId !== key || !has(data.labEvents, result.eventId) || !has(data.labStudies, result.studyId) || (result.visitId !== null && !has(data.visits, result.visitId))) fail();
+                resultIds.add(result.id);
+                const location = data.indexes?.labResultLocations?.[result.id];
+                if (!location || location.testId !== key || location.index !== index) fail();
+            }
+        }
+        if (Object.keys(data.indexes?.labResultLocations || {}).length !== resultIds.size) fail();
+        const result = key => { const location = data.indexes.labResultLocations[key]; return location && data.labTests[location.testId]?.results[location.index]; };
+        for (const test of Object.values(data.labTests)) {
+            if (test.results.some((row, index) => index > 0 && chronological(test.results[index - 1], row) > 0)) fail();
+            for (const row of test.results) {
+                if (!data.labEvents[row.eventId].resultIds?.includes(row.id) || !data.labStudies[row.studyId].resultIds?.includes(row.id) || data.labStudies[row.studyId].eventId !== row.eventId || data.labEvents[row.eventId].visitId !== row.visitId) fail();
+                if (row.visitId && !data.visits[row.visitId].labResultIds?.includes(row.id)) fail();
+                if (row.unitInference && (!Array.isArray(row.unitInference.evidence) || row.unitInference.evidence.some(key => !resultIds.has(key)))) fail();
+            }
+        }
+        for (const [key, event] of Object.entries(data.labEvents)) if (key !== event.id || !Array.isArray(event.studyIds) || !Array.isArray(event.resultIds) || event.studyIds.some(id => !has(data.labStudies, id)) || event.resultIds.some(id => !resultIds.has(id)) || (event.visitId !== null && !has(data.visits, event.visitId))) fail();
+        for (const [key, study] of Object.entries(data.labStudies)) if (key !== study.id || !has(data.labEvents, study.eventId) || !Array.isArray(study.resultIds) || study.resultIds.some(id => !resultIds.has(id))) fail();
+        for (const [key, visit] of Object.entries(data.visits)) if (key !== visit.id || !Array.isArray(visit.labResultIds) || !Array.isArray(visit.labTestIds) || !Array.isArray(visit.prescriptionIds) || visit.labResultIds.some(id => !resultIds.has(id)) || visit.labTestIds.some(id => !has(data.labTests, id)) || visit.prescriptionIds.some(id => !has(data.prescriptions, id))) fail();
+        for (const [key, rx] of Object.entries(data.prescriptions)) if (key !== rx.id || !Array.isArray(rx.visitIds) || rx.visitIds.some(id => !has(data.visits, id))) fail();
+        for (const event of Object.values(data.labEvents)) if (event.resultIds.some(key => result(key)?.eventId !== event.id) || event.studyIds.some(key => data.labStudies[key].eventId !== event.id)) fail();
+        for (const study of Object.values(data.labStudies)) if (study.resultIds.some(key => result(key)?.studyId !== study.id)) fail();
+        for (const visit of Object.values(data.visits)) if (visit.labResultIds.some(key => result(key)?.visitId !== visit.id) || visit.prescriptionIds.some(key => !data.prescriptions[key].visitIds.includes(visit.id))) fail();
+        for (const rx of Object.values(data.prescriptions)) if (rx.visitIds.some(key => !data.visits[key].prescriptionIds.includes(rx.id))) fail();
+        if (!data.source?.labs || data.source.labs.format !== 'kantain-laboratoriot-v1') fail();
+        return data;
+    }
+    function restore(data) {
+        validate(data);
+        const visits = Object.values(data.visits).map(node => copy(node.source));
+        const prescriptions = Object.values(data.prescriptions).map(node => copy(node.source));
+        const events = Object.values(data.labEvents).map(node => {
+            const event = copy(node.source);
+            event.studies = {};
+            for (const id of node.studyIds) { const study = data.labStudies[id]; if (study.source !== null) event.studies[study.sourceIndex] = copy(study.source); }
+            return event;
+        });
+        return { ...copy(data.source), format: 'kantain-kaikki-v1', complete: data.complete, errors: data.errors || [], visits, prescriptions, labs: { ...copy(data.source.labs), events } };
+    }
+    const api = { build, restore, validate };
+    if (typeof module !== 'undefined' && module.exports) module.exports = api;
+    else root.KantainLinked = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
 </body>
 </html>
