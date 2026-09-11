@@ -6,6 +6,7 @@
     <title>Kantain</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         html {
@@ -121,10 +122,25 @@
                         <svg id="theme-icon-light" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                         <svg id="theme-icon-dark" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
                     </button>
-                    <button id="export-pdf" class="flex items-center bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-700 transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        Vie PDF
-                    </button>
+                    <div class="relative" id="export-pdf-dropdown">
+                        <div class="inline-flex shadow-md rounded-lg overflow-hidden">
+                            <button id="export-pdf-action" class="flex items-center bg-red-600 text-white font-semibold py-2 px-4 hover:bg-red-700 transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                                <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                <span id="export-pdf-action-label">Vie PDF</span>
+                            </button>
+                            <button id="export-pdf-toggle" class="bg-red-600 text-white px-3 hover:bg-red-700 transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed" aria-haspopup="true" aria-expanded="false" aria-label="PDF-viennin valikko" disabled>
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                        </div>
+                        <div id="export-pdf-menu" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-30">
+                            <button id="export-pdf-option-current" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+                                Vie PDF (nykyinen näkymä)
+                            </button>
+                            <button id="export-pdf-option-year-zip" class="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 border-t border-gray-200 dark:border-gray-700">
+                                Vie PDF per vuosi (ZIP)
+                            </button>
+                        </div>
+                    </div>
                     <button id="export-json" class="flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
                         <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                         Vie JSON
@@ -171,7 +187,14 @@
     </div>
 
         <main id="output-section" class="container mx-auto p-4 sm:p-6 lg:p-8 hidden">
-         <div class="flex justify-end mb-4">
+         <div class="flex justify-between items-center mb-4">
+             <div class="flex items-center gap-3">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Aikaväli:</label>
+                <input type="date" id="date-range-start" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <span class="text-gray-600 dark:text-gray-400">-</span>
+                <input type="date" id="date-range-end" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md shadow-sm px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <button id="clear-date-range" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Tyhjennä</button>
+             </div>
              <button id="reset-data" class="flex items-center bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-600 transition duration-300 ease-in-out">
                 <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5" />
@@ -257,7 +280,13 @@
             const outputSection = document.getElementById('output-section');
             const visitsContainer = document.getElementById('visits-container');
             const exportJsonBtn = document.getElementById('export-json');
-            const exportPdfBtn = document.getElementById('export-pdf');
+            const exportPdfActionBtn = document.getElementById('export-pdf-action');
+            const exportPdfToggleBtn = document.getElementById('export-pdf-toggle');
+            const exportPdfMenu = document.getElementById('export-pdf-menu');
+            const exportPdfOptionCurrent = document.getElementById('export-pdf-option-current');
+            const exportPdfOptionYearZip = document.getElementById('export-pdf-option-year-zip');
+            const exportPdfActionLabel = document.getElementById('export-pdf-action-label');
+            const exportPdfDropdown = document.getElementById('export-pdf-dropdown');
             const resetDataBtn = document.getElementById('reset-data');
             const errorMessage = document.getElementById('error-message');
             const loadingOverlay = document.getElementById('loading-overlay');
@@ -274,10 +303,54 @@
             const prescriptionDropZone = document.getElementById('prescription-drop-zone');
             const jsonFileInput = document.getElementById('json-file-input');
             const prescriptionFileInput = document.getElementById('prescription-file-input');
+            const dateRangeStart = document.getElementById('date-range-start');
+            const dateRangeEnd = document.getElementById('date-range-end');
+            const clearDateRangeBtn = document.getElementById('clear-date-range');
             
             let currentData = [];
             let prescriptionData = [];
             let filteredData = [];
+            let filteredPrescriptionData = [];
+            let pdfExportMode = 'current'; // 'current' | 'year-zip'
+
+            const setPdfExportMode = (mode) => {
+                pdfExportMode = mode;
+                exportPdfActionLabel.textContent = mode === 'year-zip' ? 'Vie PDF (ZIP)' : 'Vie PDF';
+                exportPdfOptionCurrent.classList.toggle('font-semibold', mode === 'current');
+                exportPdfOptionYearZip.classList.toggle('font-semibold', mode === 'year-zip');
+            };
+
+            const closePdfMenu = () => {
+                exportPdfMenu.classList.add('hidden');
+                exportPdfToggleBtn.setAttribute('aria-expanded', 'false');
+            };
+
+            const togglePdfMenu = () => {
+                const isHidden = exportPdfMenu.classList.contains('hidden');
+                if (isHidden) {
+                    exportPdfMenu.classList.remove('hidden');
+                    exportPdfToggleBtn.setAttribute('aria-expanded', 'true');
+                } else {
+                    closePdfMenu();
+                }
+            };
+
+            const getActiveExportSection = () => {
+                return prescriptionsSection.classList.contains('hidden') ? 'visits' : 'prescriptions';
+            };
+
+            const downloadBlob = (blob, filename) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            setPdfExportMode('current');
 
             
             const applyTheme = (theme) => {
@@ -432,7 +505,12 @@
                                     <h3 class="text-xl font-bold text-blue-700 dark:text-blue-400">${serviceUnit ? serviceUnit.organisaationNimi : 'Tuntematon yksikkö'}</h3>
                                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Käynnin tyyppi: ${visit.hoidonTyyppi || 'Ei määritelty'}</p>
                                 </div>
-                                <span class="text-xl font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">${visit.pvmStr}</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xl font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">${visit.pvmStr}</span>
+                                    <button class="export-visit-pdf-btn p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Vie käynti PDF:ksi" data-visit-index="${index}">
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                    </button>
+                                </div>
                             </div>
                             <div class="mt-4">
                                 <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Diagnoosit</h4>
@@ -593,6 +671,10 @@
                 const selectedPersons = getSelected(henkiloFilterContainer);
                 const searchTerm = keywordSearch.value.toLowerCase();
 
+                const startDate = dateRangeStart.value ? new Date(dateRangeStart.value) : null;
+                const endDate = dateRangeEnd.value ? new Date(dateRangeEnd.value) : null;
+                if (endDate) endDate.setHours(23, 59, 59, 999);
+
                 filteredData = currentData.filter(visit => {
                     const diagnosisMatch = selectedDiagnoses.length === 0 || 
                         visit.diagnoosienTiedot.some(d => selectedDiagnoses.includes(d.fi));
@@ -608,9 +690,23 @@
                     
                     const searchMatch = searchTerm === '' || JSON.stringify(visit).toLowerCase().includes(searchTerm);
 
-                    return diagnosisMatch && locationMatch && personMatch && searchMatch;
+                    const visitDate = new Date(visit.pvm);
+                    const dateMatch = (!startDate || visitDate >= startDate) && (!endDate || visitDate <= endDate);
+
+                    return diagnosisMatch && locationMatch && personMatch && searchMatch && dateMatch;
                 });
+                
+                // Filter prescriptions by date range and search term
+                filteredPrescriptionData = prescriptionData.filter(p => {
+                    const prescriptionDate = new Date(p.aikaleima);
+                    const dateMatch = (!startDate || prescriptionDate >= startDate) && (!endDate || prescriptionDate <= endDate);
+                    const searchMatch = searchTerm === '' || JSON.stringify(p).toLowerCase().includes(searchTerm);
+                    return dateMatch && searchMatch;
+                });
+                
                 renderVisits(filteredData);
+                renderPrescriptions(filteredPrescriptionData);
+                updateSummary(filteredData);
             };
             
             const updateSwitcherUI = (activeButton) => {
@@ -666,16 +762,16 @@
 
                     linkData(currentData, prescriptionData);
                     filteredData = currentData;
-                    updateSummary(currentData);
+                    filteredPrescriptionData = prescriptionData;
                     populateFilters(currentData);
-                    renderVisits(currentData);
-                    renderPrescriptions(prescriptionData);
+                    applyFilters(); // This will render everything and update summary
                     
                     inputSection.classList.add('hidden');
                     outputSection.classList.remove('hidden');
                     errorMessage.classList.add('hidden');
                     exportJsonBtn.disabled = false;
-                    exportPdfBtn.disabled = false;
+                    exportPdfActionBtn.disabled = false;
+                    exportPdfToggleBtn.disabled = false;
                     
                     
                     setTimeout(() => updateSwitcherUI(tabVisits), 50);
@@ -697,13 +793,19 @@
                 currentData = [];
                 prescriptionData = [];
                 filteredData = [];
+                filteredPrescriptionData = [];
                 exportJsonBtn.disabled = true;
-                exportPdfBtn.disabled = true;
+                exportPdfActionBtn.disabled = true;
+                exportPdfToggleBtn.disabled = true;
+                closePdfMenu();
+                setPdfExportMode('current');
                 diagnoosiFilterContainer.innerHTML = '';
                 sijaintiFilterContainer.innerHTML = '';
                 henkiloFilterContainer.innerHTML = '';
                 summarySection.innerHTML = '';
                 keywordSearch.value = '';
+                dateRangeStart.value = '';
+                dateRangeEnd.value = '';
             });
 
             tabVisits.addEventListener('click', () => updateSwitcherUI(tabVisits));
@@ -724,6 +826,22 @@
                                 targetCard.classList.remove('ring-4', 'ring-blue-500', 'ring-opacity-75');
                             }, 2000);
                         }, 100);
+                    }
+                }
+
+                // Handle per-visit PDF export button
+                const pdfBtn = e.target.closest('.export-visit-pdf-btn');
+                if (pdfBtn) {
+                    e.preventDefault();
+                    const visitIndex = parseInt(pdfBtn.dataset.visitIndex, 10);
+                    const visit = filteredData.find((v, idx) => {
+                        const sortedData = [...filteredData].sort((a, b) => new Date(b.pvm) - new Date(a.pvm));
+                        return sortedData[visitIndex] === v;
+                    });
+                    const sortedData = [...filteredData].sort((a, b) => new Date(b.pvm) - new Date(a.pvm));
+                    const targetVisit = sortedData[visitIndex];
+                    if (targetVisit) {
+                        exportSingleVisitToPdf(targetVisit);
                     }
                 }
             });
@@ -763,9 +881,17 @@
                 container.addEventListener('change', applyFilters);
             });
             keywordSearch.addEventListener('input', applyFilters);
+            dateRangeStart.addEventListener('change', applyFilters);
+            dateRangeEnd.addEventListener('change', applyFilters);
+            
+            clearDateRangeBtn.addEventListener('click', () => {
+                dateRangeStart.value = '';
+                dateRangeEnd.value = '';
+                applyFilters();
+            });
 
             exportJsonBtn.addEventListener('click', async () => {
-                if (filteredData.length === 0 && prescriptionData.length === 0) return;
+                if (filteredData.length === 0 && filteredPrescriptionData.length === 0) return;
                 progressText.textContent = 'Luodaan JSON-tiedostoa...';
                 loadingOverlay.classList.remove('hidden');
                 loadingOverlay.classList.add('flex');
@@ -784,7 +910,7 @@
                             teksti: merkinta.nayttomuoto?.replace(/Kuvaus;\s*/g, '').replace(/<[^>]*>/g, ' ').replace(/\s\s+/g, ' ').trim() || ''
                         })) || [],
                     })),
-                    reseptit: prescriptionData
+                    reseptit: filteredPrescriptionData
                 };
                 
                 const dataStr = JSON.stringify(exportObject, null, 2);
@@ -801,27 +927,139 @@
                 loadingOverlay.classList.remove('flex');
             });
 
-            exportPdfBtn.addEventListener('click', async () => {
+            document.addEventListener('click', (e) => {
+                if (!exportPdfDropdown.contains(e.target)) closePdfMenu();
+            });
+
+            exportPdfToggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (exportPdfToggleBtn.disabled) return;
+                togglePdfMenu();
+            });
+
+            exportPdfOptionCurrent.addEventListener('click', async () => {
+                setPdfExportMode('current');
+                closePdfMenu();
+                await runPdfExport();
+            });
+
+            exportPdfOptionYearZip.addEventListener('click', async () => {
+                setPdfExportMode('year-zip');
+                closePdfMenu();
+                await runPdfExport();
+            });
+
+            exportPdfActionBtn.addEventListener('click', async () => {
+                if (exportPdfActionBtn.disabled) return;
+                await runPdfExport();
+            });
+
+            const runPdfExport = async () => {
                 loadingOverlay.classList.remove('hidden');
                 loadingOverlay.classList.add('flex');
-                
+
                 try {
-                    if (prescriptionsSection.classList.contains('hidden')) {
-                        await exportVisitsToPdf();
+                    if (pdfExportMode === 'year-zip') {
+                        await exportPdfPerYearZip();
+                        return;
+                    }
+
+                    const active = getActiveExportSection();
+                    if (active === 'visits') {
+                        await exportVisitsToPdf(filteredData, { save: true, filename: 'potilastiedot_suodatettu.pdf', progressPrefix: 'Luodaan PDF...' });
                     } else {
-                        await exportPrescriptionsToPdf();
+                        await exportPrescriptionsToPdf(filteredPrescriptionData, { save: true, filename: 'reseptit_suodatettu.pdf', progressPrefix: 'Luodaan PDF...' });
                     }
                 } catch (err) {
-                     console.error("Virhe PDF-tiedoston luonnissa:", err);
+                    console.error("Virhe PDF-tiedoston luonnissa:", err);
                     alert("PDF-tiedoston luonti epäonnistui.");
                 } finally {
                     loadingOverlay.classList.add('hidden');
                     loadingOverlay.classList.remove('flex');
                 }
-            });
+            };
 
-            const exportVisitsToPdf = async () => {
-                 if (filteredData.length === 0) return;
+            const exportPdfPerYearZip = async () => {
+                if (!window.JSZip) throw new Error('JSZip-kirjastoa ei löytynyt.');
+
+                const active = getActiveExportSection();
+                const sourceData = active === 'visits' ? filteredData : filteredPrescriptionData;
+                if (!sourceData || sourceData.length === 0) return;
+
+                const getYear = (item) => {
+                    const dateValue = active === 'visits' ? item.pvm : item.aikaleima;
+                    const d = new Date(dateValue);
+                    return Number.isFinite(d.getTime()) ? d.getFullYear() : null;
+                };
+
+                const years = [...new Set(sourceData.map(getYear).filter(y => y !== null))].sort((a, b) => b - a);
+                if (years.length === 0) return;
+
+                const zip = new window.JSZip();
+
+                for (const [yearIndex, year] of years.entries()) {
+                    const yearItems = sourceData.filter(item => getYear(item) === year);
+                    progressText.textContent = `Vuosi ${year}: Luodaan PDF... (${yearIndex + 1} / ${years.length})`;
+                    await new Promise(resolve => setTimeout(resolve, 25));
+
+                    const pdfArrayBuffer = active === 'visits'
+                        ? await exportVisitsToPdf(yearItems, { save: false, returnArrayBuffer: true, progressPrefix: `Vuosi ${year}: Luodaan PDF...` })
+                        : await exportPrescriptionsToPdf(yearItems, { save: false, returnArrayBuffer: true, progressPrefix: `Vuosi ${year}: Luodaan PDF...` });
+
+                    const filename = active === 'visits'
+                        ? `potilastiedot_${year}.pdf`
+                        : `reseptit_${year}.pdf`;
+                    
+                    zip.file(filename, pdfArrayBuffer, { binary: true });
+                }
+
+                progressText.textContent = 'Pakataan ZIP...';
+                await new Promise(resolve => setTimeout(resolve, 25));
+
+                const zipBlob = await zip.generateAsync(
+                    { type: 'blob' },
+                    (metadata) => {
+                        if (metadata && typeof metadata.percent === 'number') {
+                            progressText.textContent = `Pakataan ZIP... ${Math.round(metadata.percent)}%`;
+                        }
+                    }
+                );
+
+                const zipName = active === 'visits'
+                    ? 'potilastiedot_per_vuosi.zip'
+                    : 'reseptit_per_vuosi.zip';
+                downloadBlob(zipBlob, zipName);
+            };
+
+            const exportSingleVisitToPdf = async (visit) => {
+                if (!visit) return;
+                
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.classList.add('flex');
+                progressText.textContent = 'Luodaan PDF...';
+                
+                try {
+                    await exportVisitsToPdf([visit], { 
+                        save: true, 
+                        filename: `kaynti_${visit.pvmStr.replace(/\./g, '-')}.pdf`,
+                        progressPrefix: 'Luodaan PDF...'
+                    });
+                } catch (err) {
+                    console.error('Virhe käynnin PDF-viennissä:', err);
+                    alert('PDF-tiedoston luonti epäonnistui.');
+                } finally {
+                    loadingOverlay.classList.add('hidden');
+                    loadingOverlay.classList.remove('flex');
+                }
+            };
+
+            const exportVisitsToPdf = async (visits, options = {}) => {
+                 const data = Array.isArray(visits) ? visits : [];
+                 if (data.length === 0) return;
+                 const save = options.save !== false;
+                 const returnArrayBuffer = options.returnArrayBuffer === true;
+                 const progressPrefix = options.progressPrefix || 'Luodaan PDF...';
+
                  const { jsPDF } = window.jspdf;
                  const pdf = new jsPDF('p', 'mm', 'a4');
                  
@@ -840,11 +1078,11 @@
                      }
                  };
 
-                 const sortedData = [...filteredData].sort((a, b) => new Date(b.pvm) - new Date(a.pvm));
+                 const sortedData = [...data].sort((a, b) => new Date(b.pvm) - new Date(a.pvm));
                  const totalVisits = sortedData.length;
 
                  for (const [index, visit] of sortedData.entries()) {
-                     progressText.textContent = `Luodaan PDF... (${index + 1} / ${totalVisits})`;
+                     progressText.textContent = `${progressPrefix} (${index + 1} / ${totalVisits})`;
                      await new Promise(resolve => setTimeout(resolve, 10)); 
 
                      checkPageBreak(40);
@@ -966,12 +1204,24 @@
                           pdf.text('Ei yksityiskohtaisia potilaskertomuksia.', margin, y);
                           y += lineHeight;
                      }
+                     
+                     // Add new page for next visit (except for the last one)
+                     if (index < totalVisits - 1) {
+                         pdf.addPage();
+                         y = margin;
+                     }
                  }
-                 pdf.save('potilastiedot_suodatettu.pdf');
+                 if (returnArrayBuffer) return pdf.output('arraybuffer');
+                 if (save) pdf.save(options.filename || 'potilastiedot_suodatettu.pdf');
             };
 
-            const exportPrescriptionsToPdf = async () => {
-                if (prescriptionData.length === 0) return;
+            const exportPrescriptionsToPdf = async (prescriptions, options = {}) => {
+                const data = Array.isArray(prescriptions) ? prescriptions : [];
+                if (data.length === 0) return;
+                const save = options.save !== false;
+                const returnArrayBuffer = options.returnArrayBuffer === true;
+                const progressPrefix = options.progressPrefix || 'Luodaan PDF...';
+
                  const { jsPDF } = window.jspdf;
                  const pdf = new jsPDF('p', 'mm', 'a4');
                  const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -989,11 +1239,11 @@
                      }
                  };
 
-                const sortedData = [...prescriptionData].sort((a,b) => new Date(b.aikaleima) - new Date(a.aikaleima));
+                const sortedData = [...data].sort((a,b) => new Date(b.aikaleima) - new Date(a.aikaleima));
                 const totalPrescriptions = sortedData.length;
 
                 for (const [index, p] of sortedData.entries()) {
-                    progressText.textContent = `Luodaan PDF... (${index + 1} / ${totalPrescriptions})`;
+                    progressText.textContent = `${progressPrefix} (${index + 1} / ${totalPrescriptions})`;
                     await new Promise(resolve => setTimeout(resolve, 10));
 
                     checkPageBreak(35);
@@ -1049,7 +1299,8 @@
                         }
                     }
                 }
-                pdf.save('reseptit_suodatettu.pdf');
+                if (returnArrayBuffer) return pdf.output('arraybuffer');
+                if (save) pdf.save(options.filename || 'reseptit_suodatettu.pdf');
             };
         });
     </script>
